@@ -461,15 +461,22 @@ public partial class MainWindow : Window
             }
             else
             {
-                var form = new FormUrlEncodedContent([
-                    new KeyValuePair<string,string>("username", TxtPveUser.Text?.Trim() ?? ""),
-                    new KeyValuePair<string,string>("password", TxtPvePass.Text ?? "")
-                ]);
+                var user = Uri.EscapeDataString(TxtPveUser.Text?.Trim() ?? "");
+                var pass = Uri.EscapeDataString(TxtPvePass.Text ?? "");
+                var form = new StringContent($"username={user}&password={pass}",
+                    System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
                 var loginResp = await http.PostAsync($"{PveBase}/access/ticket", form);
                 var loginJson = await loginResp.Content.ReadAsStringAsync();
                 var loginData = JsonDocument.Parse(loginJson);
-                _pveTicket = loginData.RootElement.GetProperty("data").GetProperty("ticket").GetString() ?? "";
-                _pveCsrf   = loginData.RootElement.GetProperty("data").GetProperty("CSRFPreventionToken").GetString() ?? "";
+                var dataElem  = loginData.RootElement.GetProperty("data");
+                if (dataElem.ValueKind == JsonValueKind.Null)
+                {
+                    var msg = loginData.RootElement.TryGetProperty("message", out var m) ? m.GetString() : "credenziali errate";
+                    SetStatus($"❌ Proxmox: {msg}");
+                    return;
+                }
+                _pveTicket = dataElem.GetProperty("ticket").GetString() ?? "";
+                _pveCsrf   = dataElem.GetProperty("CSRFPreventionToken").GetString() ?? "";
                 http.DefaultRequestHeaders.Add("Cookie", $"PVEAuthCookie={_pveTicket}");
                 http.DefaultRequestHeaders.Add("CSRFPreventionToken", _pveCsrf);
                 resp = await http.GetAsync($"{PveBase}/nodes");
@@ -482,7 +489,14 @@ public partial class MainWindow : Window
             SetStatus($"✅ Connesso a Proxmox — nodo {node}");
             await LoadPveVmsAsync(http, node);
         }
-        catch (Exception ex) { SetStatus($"❌ Errore connessione Proxmox: {ex.Message}"); }
+        catch (Exception ex)
+        {
+            var detail = ex.InnerException?.Message ?? ex.Message;
+            SetStatus($"❌ Proxmox: {detail}");
+            // Log su file
+            try { System.IO.File.AppendAllText("/tmp/novascm_pve.log",
+                $"[{DateTime.Now:HH:mm:ss}] {ex}\n"); } catch { }
+        }
     }
 
     private void BtnPveRefresh_Click(object? s, RoutedEventArgs e) => BtnPveConnect_Click(s, e);
