@@ -269,8 +269,10 @@
                         <TextBox x:Name="TxtPveHost"  Width="200" Text="192.168.10.201" CornerRadius="6" Padding="8,6"/>
                         <TextBlock Text="User:" VerticalAlignment="Center" FontSize="13"/>
                         <TextBox x:Name="TxtPveUser"  Width="140" Text="root@pam" CornerRadius="6" Padding="8,6"/>
+                        <TextBlock Text="Password:" VerticalAlignment="Center" FontSize="13"/>
+                        <TextBox x:Name="TxtPvePass" PasswordChar="●" Width="140" Watermark="password" CornerRadius="6" Padding="8,6"/>
                         <TextBlock Text="Token:" VerticalAlignment="Center" FontSize="13"/>
-                        <TextBox x:Name="TxtPveToken" Width="260" Watermark="PVEAPIToken=root@pam!id=secret" CornerRadius="6" Padding="8,6"/>
+                        <TextBox x:Name="TxtPveToken" Width="200" Watermark="oppure: root@pam!id=secret" CornerRadius="6" Padding="8,6"/>
                         <Button x:Name="BtnPveConnect" Classes="btn-primary" Content="Connetti" Click="BtnPveConnect_Click"/>
                         <Button x:Name="BtnPveRefresh" Classes="btn-secondary" Content="↺ Aggiorna" Click="BtnPveRefresh_Click"/>
                     </StackPanel>

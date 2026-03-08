@@ -463,7 +463,7 @@ public partial class MainWindow : Window
             {
                 var form = new FormUrlEncodedContent([
                     new KeyValuePair<string,string>("username", TxtPveUser.Text?.Trim() ?? ""),
-                    new KeyValuePair<string,string>("password", TxtAdminPass.Text ?? "")
+                    new KeyValuePair<string,string>("password", TxtPvePass.Text ?? "")
                 ]);
                 var loginResp = await http.PostAsync($"{PveBase}/access/ticket", form);
                 var loginJson = await loginResp.Content.ReadAsStringAsync();
