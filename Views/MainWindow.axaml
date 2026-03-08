@@ -1,0 +1,539 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:dg="using:Avalonia.Controls"
+        mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
+        x:Class="NovaSCM.Views.MainWindow"
+        Title="NovaSCM"
+        Width="1280" Height="800"
+        MinWidth="900" MinHeight="600"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Styles>
+        <!-- Header dark style -->
+        <Style Selector="Border.header">
+            <Setter Property="Background" Value="#0d1b3e"/>
+        </Style>
+        <Style Selector="TextBlock.header-title">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="TextBlock.header-sub">
+            <Setter Property="Foreground" Value="#94a3b8"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <!-- Tab buttons -->
+        <Style Selector="Button.tab-btn">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#94a3b8"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.tab-btn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#1e2d4a"/>
+            <Setter Property="TextElement.Foreground" Value="White"/>
+        </Style>
+        <Style Selector="Button.tab-btn-active">
+            <Setter Property="Background" Value="#1e3a5f"/>
+            <Setter Property="Foreground" Value="#60a5fa"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="BorderThickness" Value="0,0,0,2"/>
+            <Setter Property="BorderBrush" Value="#3b82f6"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <!-- Action buttons -->
+        <Style Selector="Button.btn-primary">
+            <Setter Property="Background" Value="#3b82f6"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="14,7"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.btn-primary:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#2563eb"/>
+        </Style>
+        <Style Selector="Button.btn-secondary">
+            <Setter Property="Background" Value="#334155"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.btn-danger">
+            <Setter Property="Background" Value="#dc2626"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.btn-success">
+            <Setter Property="Background" Value="#16a34a"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <!-- TextBox -->
+        <Style Selector="TextBox.search-box">
+            <Setter Property="Background" Value="#1e293b"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#334155"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+        <!-- Section label -->
+        <Style Selector="TextBlock.section-label">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="#64748b"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+        <!-- Status bar -->
+        <Style Selector="Border.statusbar">
+            <Setter Property="Background" Value="#0f172a"/>
+        </Style>
+        <Style Selector="TextBlock.status-text">
+            <Setter Property="Foreground" Value="#94a3b8"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- ═══ HEADER ═══════════════════════════════════════════════════ -->
+        <Border Grid.Row="0" Classes="header">
+            <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,0,12,0">
+
+                <!-- Logo + titolo -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="16,10">
+                    <TextBlock Text="■" FontSize="22" Foreground="#3b82f6" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <StackPanel>
+                        <TextBlock Classes="header-title" Text="NovaSCM"/>
+                        <TextBlock Classes="header-sub" Text="Network &amp; Systems Management"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Tab navigation -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                    <Button x:Name="BtnTabNet"     Classes="tab-btn-active" Content="📡 Rete"     Click="BtnTabNet_Click"/>
+                    <Button x:Name="BtnTabPc"      Classes="tab-btn"        Content="🖥️ PC Fleet"  Click="BtnTabPc_Click"/>
+                    <Button x:Name="BtnTabProxmox" Classes="tab-btn"        Content="🔷 Proxmox"  Click="BtnTabProxmox_Click"/>
+                    <Button x:Name="BtnTabScripts" Classes="tab-btn"        Content="📜 Script"   Click="BtnTabScripts_Click"/>
+                    <Button x:Name="BtnTabCerts"   Classes="tab-btn"        Content="🔐 Certificati" Click="BtnTabCerts_Click"/>
+                    <Button x:Name="BtnTabSettings" Classes="tab-btn"       Content="⚙️ Impostazioni" Click="BtnTabSettings_Click"/>
+                    <Button x:Name="BtnTabAbout"   Classes="tab-btn"        Content="ℹ️ About"    Click="BtnTabAbout_Click"/>
+                </StackPanel>
+
+                <!-- Versione -->
+                <TextBlock Grid.Column="2" x:Name="TxtVersion" Text="v1.1.0" Classes="header-sub" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- ═══ CONTENUTO TAB ════════════════════════════════════════════ -->
+        <Grid Grid.Row="1" Background="#f8fafc">
+
+            <!-- ── TAB RETE ──────────────────────────────────────────── -->
+            <Grid x:Name="TabNet" RowDefinitions="Auto,*,Auto" IsVisible="True">
+                <!-- Toolbar -->
+                <Border Grid.Row="0" Background="White" Padding="12,10"
+                        BoxShadow="0 1 3 0 #1000000015">
+                    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto">
+                        <Button Grid.Column="0" x:Name="BtnScan"    Classes="btn-primary"    Content="▶ Scansiona"     Click="BtnScan_Click"    Margin="0,0,8,0"/>
+                        <Button Grid.Column="1" x:Name="BtnScanAll" Classes="btn-secondary"  Content="🌐 Tutte VLAN"   Click="BtnScanAll_Click" Margin="0,0,8,0"/>
+                        <Button Grid.Column="2" x:Name="BtnStop"    Classes="btn-danger"     Content="⏹ Stop"          Click="BtnStop_Click"    IsEnabled="False" Margin="0,0,16,0"/>
+                        <Button Grid.Column="3" x:Name="BtnWol"     Classes="btn-secondary"  Content="⚡ WoL"          Click="BtnWol_Click"     Margin="0,0,8,0"/>
+                        <TextBox Grid.Column="4" x:Name="TxtFilter"  Classes="search-box"
+                                 Watermark="🔍 Filtra per IP, nome, vendor..."
+                                 TextChanged="TxtFilter_TextChanged" Margin="8,0"/>
+                        <Button Grid.Column="5" x:Name="BtnRdp"   Classes="btn-secondary" Content="🖥 RDP"  Click="BtnRdp_Click"  Margin="0,0,8,0"/>
+                        <Button Grid.Column="6" x:Name="BtnSsh"   Classes="btn-secondary" Content="🔒 SSH"  Click="BtnSsh_Click"/>
+                    </Grid>
+                </Border>
+
+                <!-- Scan config + DataGrid -->
+                <Grid Grid.Row="1" ColumnDefinitions="240,*">
+                    <!-- Pannello sinistro: config scan -->
+                    <Border Grid.Column="0" Background="White" Margin="0,0,1,0" Padding="14">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Configurazione Scansione" FontWeight="SemiBold" FontSize="14" Foreground="#1e293b"/>
+
+                            <TextBlock Classes="section-label" Text="IP BASE"/>
+                            <TextBox x:Name="TxtScanIp" Text="192.168.1.0" CornerRadius="6" Padding="8,6"/>
+
+                            <TextBlock Classes="section-label" Text="SUBNET (CIDR)"/>
+                            <TextBox x:Name="TxtScanSubnet" Text="24" CornerRadius="6" Padding="8,6"/>
+
+                            <TextBlock Classes="section-label" Text="RETI MULTIPLE (una per riga)"/>
+                            <TextBox x:Name="TxtScanNetworks" Text="192.168.1.0/24" Height="80"
+                                     AcceptsReturn="True" TextWrapping="Wrap" CornerRadius="6" Padding="8,6"/>
+
+                            <TextBlock Text="Device selezionato:" Classes="section-label" Margin="0,10,0,0"/>
+                            <Border Background="#f1f5f9" CornerRadius="6" Padding="10">
+                                <StackPanel x:Name="PanelDeviceDetail" Spacing="4">
+                                    <TextBlock x:Name="TxtDetailIp"     Text="—" FontWeight="Bold" FontSize="13"/>
+                                    <TextBlock x:Name="TxtDetailName"   Text="—" FontSize="12" Foreground="#64748b"/>
+                                    <TextBlock x:Name="TxtDetailMac"    Text="—" FontSize="12" Foreground="#64748b"/>
+                                    <TextBlock x:Name="TxtDetailVendor" Text="—" FontSize="12" Foreground="#64748b"/>
+                                    <TextBlock x:Name="TxtDetailType"   Text="—" FontSize="12" Foreground="#64748b"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- DataGrid dispositivi -->
+                    <Grid Grid.Column="1" RowDefinitions="*">
+                        <dg:DataGrid x:Name="NetGrid"
+                                     AutoGenerateColumns="False"
+                                     CanUserResizeColumns="True"
+                                     IsReadOnly="True"
+                                     GridLinesVisibility="Horizontal"
+                                     SelectionChanged="NetGrid_SelectionChanged"
+                                     Background="White"
+                                     RowBackground="White">
+                            <dg:DataGrid.Columns>
+                                <dg:DataGridTextColumn Header="Icona"   Binding="{Binding Icon}"           Width="50"/>
+                                <dg:DataGridTextColumn Header="IP"      Binding="{Binding Ip}"             Width="130"/>
+                                <dg:DataGridTextColumn Header="Nome"    Binding="{Binding Name}"           Width="160"/>
+                                <dg:DataGridTextColumn Header="MAC"     Binding="{Binding Mac}"            Width="150"/>
+                                <dg:DataGridTextColumn Header="Vendor"  Binding="{Binding Vendor}"         Width="180"/>
+                                <dg:DataGridTextColumn Header="Tipo"    Binding="{Binding DeviceType}"     Width="140"/>
+                                <dg:DataGridTextColumn Header="Conn."   Binding="{Binding ConnectionType}" Width="90"/>
+                                <dg:DataGridTextColumn Header="Stato"   Binding="{Binding Status}"         Width="120"/>
+                                <dg:DataGridTextColumn Header="Cert"    Binding="{Binding CertStatus}"     Width="90"/>
+                            </dg:DataGrid.Columns>
+                        </dg:DataGrid>
+                    </Grid>
+                </Grid>
+
+                <!-- Status bar scan -->
+                <Border Grid.Row="2" Background="White" Padding="12,6"
+                        BoxShadow="0 -1 3 0 #1000000015">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" x:Name="TxtScanStatus" Text="Pronto — configura la subnet e avvia la scansione." Classes="status-text"/>
+                        <ProgressBar Grid.Column="1" x:Name="ScanProgress" Width="200" Height="6" Minimum="0" Maximum="100" Value="0"/>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- ── TAB PC FLEET ──────────────────────────────────────── -->
+            <Grid x:Name="TabPc" RowDefinitions="Auto,*" IsVisible="False">
+                <Border Grid.Row="0" Background="White" Padding="12,10"
+                        BoxShadow="0 1 3 0 #1000000015">
+                    <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto">
+                        <Button Grid.Column="0" x:Name="BtnPcRefresh"  Classes="btn-primary"   Content="↺ Aggiorna"    Click="BtnPcRefresh_Click"  Margin="0,0,8,0"/>
+                        <Button Grid.Column="1" x:Name="BtnPcAdd"      Classes="btn-secondary" Content="+ Aggiungi PC" Click="BtnPcAdd_Click"      Margin="0,0,8,0"/>
+                        <Button Grid.Column="2" x:Name="BtnPcDelete"   Classes="btn-danger"    Content="✕ Rimuovi"     Click="BtnPcDelete_Click"   Margin="0,0,8,0"/>
+                        <TextBox Grid.Column="3" x:Name="TxtPcFilter" Classes="search-box"
+                                 Watermark="🔍 Filtra PC..." Margin="8,0"/>
+                        <Button Grid.Column="4" x:Name="BtnPcSsh"     Classes="btn-secondary" Content="🔒 SSH"         Click="BtnPcSsh_Click"/>
+                    </Grid>
+                </Border>
+                <dg:DataGrid Grid.Row="1" x:Name="PcGrid"
+                             AutoGenerateColumns="False"
+                             IsReadOnly="True"
+                             GridLinesVisibility="Horizontal"
+                             Background="White">
+                    <dg:DataGrid.Columns>
+                        <dg:DataGridTextColumn Header="Icona"   Binding="{Binding Icon}"   Width="50"/>
+                        <dg:DataGridTextColumn Header="Nome"    Binding="{Binding Name}"   Width="180"/>
+                        <dg:DataGridTextColumn Header="IP"      Binding="{Binding Ip}"     Width="130"/>
+                        <dg:DataGridTextColumn Header="OS"      Binding="{Binding Os}"     Width="160"/>
+                        <dg:DataGridTextColumn Header="CPU"     Binding="{Binding Cpu}"    Width="180"/>
+                        <dg:DataGridTextColumn Header="RAM"     Binding="{Binding Ram}"    Width="100"/>
+                        <dg:DataGridTextColumn Header="Stato"   Binding="{Binding Status}" Width="120"/>
+                        <dg:DataGridTextColumn Header="Agente"  Binding="{Binding Agent}"  Width="120"/>
+                    </dg:DataGrid.Columns>
+                </dg:DataGrid>
+            </Grid>
+
+            <!-- ── TAB PROXMOX ───────────────────────────────────────── -->
+            <Grid x:Name="TabProxmox" RowDefinitions="Auto,Auto,*" IsVisible="False">
+                <!-- Config API -->
+                <Border Grid.Row="0" Background="White" Padding="12,10"
+                        BoxShadow="0 1 3 0 #1000000015">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Host:" VerticalAlignment="Center" FontSize="13"/>
+                        <TextBox x:Name="TxtPveHost"  Width="200" Text="192.168.10.201" CornerRadius="6" Padding="8,6"/>
+                        <TextBlock Text="User:" VerticalAlignment="Center" FontSize="13"/>
+                        <TextBox x:Name="TxtPveUser"  Width="140" Text="root@pam" CornerRadius="6" Padding="8,6"/>
+                        <TextBlock Text="Token:" VerticalAlignment="Center" FontSize="13"/>
+                        <TextBox x:Name="TxtPveToken" Width="260" Watermark="PVEAPIToken=root@pam!id=secret" CornerRadius="6" Padding="8,6"/>
+                        <Button x:Name="BtnPveConnect" Classes="btn-primary" Content="Connetti" Click="BtnPveConnect_Click"/>
+                        <Button x:Name="BtnPveRefresh" Classes="btn-secondary" Content="↺ Aggiorna" Click="BtnPveRefresh_Click"/>
+                    </StackPanel>
+                </Border>
+                <!-- Nodi Proxmox -->
+                <Border Grid.Row="1" Background="#eff6ff" Padding="12,8" IsVisible="False" x:Name="PveNodeBar">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Nodo:" VerticalAlignment="Center" FontSize="13"/>
+                        <TextBlock x:Name="TxtPveNode" Text="—" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="TxtPveNodeInfo" Text="" FontSize="12" Foreground="#64748b" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                    </StackPanel>
+                </Border>
+                <!-- VM/CT Grid -->
+                <Grid Grid.Row="2" ColumnDefinitions="*,300">
+                    <dg:DataGrid x:Name="PveGrid"
+                                 AutoGenerateColumns="False"
+                                 IsReadOnly="True"
+                                 GridLinesVisibility="Horizontal"
+                                 Background="White"
+                                 SelectionChanged="PveGrid_SelectionChanged">
+                        <dg:DataGrid.Columns>
+                            <dg:DataGridTextColumn Header="Tipo"       Binding="{Binding Type}"     Width="60"/>
+                            <dg:DataGridTextColumn Header="VMID"       Binding="{Binding VmId}"     Width="70"/>
+                            <dg:DataGridTextColumn Header="Nome"       Binding="{Binding Name}"     Width="180"/>
+                            <dg:DataGridTextColumn Header="Stato"      Binding="{Binding Status}"   Width="100"/>
+                            <dg:DataGridTextColumn Header="CPU%"       Binding="{Binding CpuPct}"   Width="80"/>
+                            <dg:DataGridTextColumn Header="RAM"        Binding="{Binding MemInfo}"  Width="140"/>
+                            <dg:DataGridTextColumn Header="Disco"      Binding="{Binding DiskInfo}" Width="140"/>
+                            <dg:DataGridTextColumn Header="Uptime"     Binding="{Binding Uptime}"   Width="100"/>
+                        </dg:DataGrid.Columns>
+                    </dg:DataGrid>
+                    <!-- Dettaglio VM -->
+                    <Border Grid.Column="1" Background="White" Margin="1,0,0,0" Padding="14">
+                        <StackPanel x:Name="PveDetailPanel" Spacing="8">
+                            <TextBlock Text="Dettaglio VM/CT" FontWeight="SemiBold" FontSize="14"/>
+                            <TextBlock x:Name="TxtPveDetailName"   Text="Seleziona una VM o CT" FontSize="13" Foreground="#64748b"/>
+                            <Separator/>
+                            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" x:Name="PveDetailGrid" IsVisible="False">
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="VMID:"   Foreground="#64748b" FontSize="12" Margin="0,2"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="TxtPveVmid"   FontSize="12" Margin="8,2"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Tipo:"   Foreground="#64748b" FontSize="12" Margin="0,2"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="TxtPveType"   FontSize="12" Margin="8,2"/>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Stato:"  Foreground="#64748b" FontSize="12" Margin="0,2"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="TxtPveStatus" FontSize="12" Margin="8,2"/>
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="CPU:"    Foreground="#64748b" FontSize="12" Margin="0,2"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" x:Name="TxtPveCpu"    FontSize="12" Margin="8,2"/>
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="RAM:"    Foreground="#64748b" FontSize="12" Margin="0,2"/>
+                                <TextBlock Grid.Row="4" Grid.Column="1" x:Name="TxtPveMem"    FontSize="12" Margin="8,2"/>
+                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Uptime:" Foreground="#64748b" FontSize="12" Margin="0,2"/>
+                                <TextBlock Grid.Row="5" Grid.Column="1" x:Name="TxtPveUptime" FontSize="12" Margin="8,2"/>
+                            </Grid>
+                            <StackPanel Spacing="6" Margin="0,12,0,0">
+                                <Button x:Name="BtnPveStart"   Classes="btn-success"    Content="▶ Start"    Click="BtnPveStart_Click"   IsEnabled="False"/>
+                                <Button x:Name="BtnPveStop"    Classes="btn-danger"     Content="⏹ Stop"     Click="BtnPveStop_Click"    IsEnabled="False"/>
+                                <Button x:Name="BtnPveRestart" Classes="btn-secondary"  Content="↺ Restart"  Click="BtnPveRestart_Click" IsEnabled="False"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Grid>
+
+            <!-- ── TAB SCRIPT ────────────────────────────────────────── -->
+            <Grid x:Name="TabScripts" RowDefinitions="Auto,*" IsVisible="False">
+                <Border Grid.Row="0" Background="White" Padding="12,10"
+                        BoxShadow="0 1 3 0 #1000000015">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button x:Name="BtnScriptNew"    Classes="btn-primary"   Content="+ Nuovo"    Click="BtnScriptNew_Click"/>
+                        <Button x:Name="BtnScriptDelete" Classes="btn-danger"    Content="✕ Elimina"  Click="BtnScriptDelete_Click"/>
+                        <Button x:Name="BtnScriptRun"    Classes="btn-success"   Content="▶ Esegui"   Click="BtnScriptRun_Click"/>
+                        <Button x:Name="BtnScriptSave"   Classes="btn-secondary" Content="💾 Salva"   Click="BtnScriptSave_Click"/>
+                    </StackPanel>
+                </Border>
+                <Grid Grid.Row="1" ColumnDefinitions="250,*">
+                    <!-- Lista script -->
+                    <Border Grid.Column="0" Background="White" Margin="0,0,1,0">
+                        <Grid RowDefinitions="Auto,*">
+                            <TextBlock Grid.Row="0" Text="Script salvati" FontWeight="SemiBold" Margin="12,10,12,6" FontSize="13"/>
+                            <ListBox Grid.Row="1" x:Name="LstScripts" SelectionChanged="LstScripts_SelectionChanged"
+                                     Background="Transparent"/>
+                        </Grid>
+                    </Border>
+                    <!-- Editor + output -->
+                    <Grid Grid.Column="1" RowDefinitions="Auto,*,8,*">
+                        <Border Grid.Row="0" Background="White" Padding="12,8">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <TextBlock Grid.Column="0" Text="Nome:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBox Grid.Column="1" x:Name="TxtScriptName" Watermark="nome-script" CornerRadius="6" Padding="8,6"/>
+                                <ComboBox Grid.Column="2" x:Name="CmbScriptTarget" Margin="8,0,0,0" Width="200"
+                                          PlaceholderText="Target (IP o hostname)"/>
+                            </Grid>
+                        </Border>
+                        <TextBox Grid.Row="1" x:Name="TxtScriptEditor"
+                                 AcceptsReturn="True" TextWrapping="NoWrap"
+                                 FontFamily="Consolas,Courier New,monospace"
+                                 FontSize="13" Background="#0f172a" Foreground="#e2e8f0"
+                                 Padding="12" BorderThickness="0"
+                                 Watermark="# Scrivi il tuo script qui..."/>
+                        <GridSplitter Grid.Row="2" Background="#e2e8f0"/>
+                        <Border Grid.Row="3" Background="#0f172a">
+                            <Grid RowDefinitions="Auto,*">
+                                <TextBlock Grid.Row="0" Text="Output" Foreground="#64748b" FontSize="11" Margin="12,6"/>
+                                <ScrollViewer Grid.Row="1">
+                                    <TextBox x:Name="TxtScriptOutput"
+                                             IsReadOnly="True"
+                                             AcceptsReturn="True"
+                                             TextWrapping="Wrap"
+                                             FontFamily="Consolas,Courier New,monospace"
+                                             FontSize="12" Background="Transparent" Foreground="#10b981"
+                                             BorderThickness="0" Padding="12,0"/>
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Grid>
+
+            <!-- ── TAB CERTIFICATI ───────────────────────────────────── -->
+            <Grid x:Name="TabCerts" RowDefinitions="Auto,*" IsVisible="False">
+                <Border Grid.Row="0" Background="White" Padding="12,10"
+                        BoxShadow="0 1 3 0 #1000000015">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button x:Name="BtnCertRefresh" Classes="btn-primary"   Content="↺ Aggiorna"         Click="BtnCertRefresh_Click"/>
+                        <Button x:Name="BtnCertRevoke"  Classes="btn-danger"    Content="✕ Revoca selezionato" Click="BtnCertRevoke_Click"/>
+                    </StackPanel>
+                </Border>
+                <dg:DataGrid Grid.Row="1" x:Name="CertGrid"
+                             AutoGenerateColumns="False"
+                             IsReadOnly="True"
+                             GridLinesVisibility="Horizontal"
+                             Background="White">
+                    <dg:DataGrid.Columns>
+                        <dg:DataGridTextColumn Header="Icona"   Binding="{Binding Icon}"    Width="50"/>
+                        <dg:DataGridTextColumn Header="Nome"    Binding="{Binding Name}"    Width="200"/>
+                        <dg:DataGridTextColumn Header="MAC"     Binding="{Binding Mac}"     Width="160"/>
+                        <dg:DataGridTextColumn Header="Creato"  Binding="{Binding Created}" Width="140"/>
+                        <dg:DataGridTextColumn Header="Scade"   Binding="{Binding Expires}" Width="140"/>
+                        <dg:DataGridTextColumn Header="Stato"   Binding="{Binding Status}"  Width="120"/>
+                    </dg:DataGrid.Columns>
+                </dg:DataGrid>
+            </Grid>
+
+            <!-- ── TAB IMPOSTAZIONI ──────────────────────────────────── -->
+            <ScrollViewer x:Name="TabSettings" IsVisible="False">
+                <StackPanel Margin="24" Spacing="16" MaxWidth="700">
+                    <TextBlock Text="Impostazioni" FontSize="20" FontWeight="Bold" Foreground="#1e293b"/>
+
+                    <!-- NovaSCM Server -->
+                    <Border Background="White" CornerRadius="8" Padding="16"
+                            BoxShadow="0 1 3 0 #1000000015">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="NovaSCM Server" FontWeight="SemiBold" FontSize="14"/>
+                            <TextBlock Classes="section-label" Text="URL API NovaSCM"/>
+                            <TextBox x:Name="TxtNovaSCMApiUrl" Watermark="http://server:5000" CornerRadius="6" Padding="8,6"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Rete -->
+                    <Border Background="White" CornerRadius="8" Padding="16"
+                            BoxShadow="0 1 3 0 #1000000015">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Scansione Rete" FontWeight="SemiBold" FontSize="14"/>
+                            <TextBlock Classes="section-label" Text="IP BASE DEFAULT"/>
+                            <TextBox x:Name="TxtSettingsScanIp" Watermark="192.168.1.0" CornerRadius="6" Padding="8,6"/>
+                            <TextBlock Classes="section-label" Text="CIDR DEFAULT"/>
+                            <TextBox x:Name="TxtSettingsScanSubnet" Watermark="24" CornerRadius="6" Padding="8,6"/>
+                            <TextBlock Classes="section-label" Text="RETI VLAN (una per riga, formato 192.168.x.0/24)"/>
+                            <TextBox x:Name="TxtSettingsScanNetworks" AcceptsReturn="True" Height="100"
+                                     TextWrapping="Wrap" CornerRadius="6" Padding="8,6"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- UniFi -->
+                    <Border Background="White" CornerRadius="8" Padding="16"
+                            BoxShadow="0 1 3 0 #1000000015">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="UniFi Controller" FontWeight="SemiBold" FontSize="14"/>
+                            <TextBlock Classes="section-label" Text="URL CONTROLLER"/>
+                            <TextBox x:Name="TxtUnifiUrl" Watermark="https://192.168.10.1" CornerRadius="6" Padding="8,6"/>
+                            <TextBlock Classes="section-label" Text="UTENTE"/>
+                            <TextBox x:Name="TxtUnifiUser" Watermark="admin" CornerRadius="6" Padding="8,6"/>
+                            <TextBlock Classes="section-label" Text="PASSWORD"/>
+                            <TextBox x:Name="TxtUnifiPass" PasswordChar="*" CornerRadius="6" Padding="8,6"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Certportal -->
+                    <Border Background="White" CornerRadius="8" Padding="16"
+                            BoxShadow="0 1 3 0 #1000000015">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Certportal / PKI" FontWeight="SemiBold" FontSize="14"/>
+                            <TextBlock Classes="section-label" Text="URL CERTPORTAL"/>
+                            <TextBox x:Name="TxtCertportalUrl" Watermark="https://certportal.example.it" CornerRadius="6" Padding="8,6"/>
+                            <TextBlock Classes="section-label" Text="SSID 802.1X"/>
+                            <TextBox x:Name="TxtSsid" Watermark="NovaSCM-Secure" CornerRadius="6" Padding="8,6"/>
+                            <TextBlock Classes="section-label" Text="IP RADIUS"/>
+                            <TextBox x:Name="TxtRadiusIp" Watermark="192.168.20.105" CornerRadius="6" Padding="8,6"/>
+                            <TextBlock Classes="section-label" Text="DURATA CERT (giorni)"/>
+                            <TextBox x:Name="TxtCertDays" Watermark="3650" CornerRadius="6" Padding="8,6"/>
+                            <TextBlock Classes="section-label" Text="ORGANIZZAZIONE"/>
+                            <TextBox x:Name="TxtOrgName" Watermark="PolarisCore" CornerRadius="6" Padding="8,6"/>
+                            <TextBlock Classes="section-label" Text="DOMINIO"/>
+                            <TextBox x:Name="TxtDomain" Watermark="polariscore.it" CornerRadius="6" Padding="8,6"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Credenziali admin -->
+                    <Border Background="White" CornerRadius="8" Padding="16"
+                            BoxShadow="0 1 3 0 #1000000015">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Credenziali Amministratore" FontWeight="SemiBold" FontSize="14"/>
+                            <TextBlock Classes="section-label" Text="UTENTE SSH/ADMIN"/>
+                            <TextBox x:Name="TxtAdminUser" Watermark="root" CornerRadius="6" Padding="8,6"/>
+                            <TextBlock Classes="section-label" Text="PASSWORD SSH/ADMIN"/>
+                            <TextBox x:Name="TxtAdminPass" PasswordChar="*" CornerRadius="6" Padding="8,6"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Pulsanti -->
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button x:Name="BtnSettingsSave" Classes="btn-primary" Content="💾 Salva Configurazione" Click="BtnSettingsSave_Click"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TxtSettingsStatus" Text="" FontSize="13"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ── TAB ABOUT ─────────────────────────────────────────── -->
+            <Grid x:Name="TabAbout" IsVisible="False">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16" MaxWidth="500">
+                    <TextBlock Text="■" FontSize="64" Foreground="#3b82f6" HorizontalAlignment="Center"/>
+                    <TextBlock Text="NovaSCM" FontSize="32" FontWeight="Bold" Foreground="#1e293b" HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="TxtAboutVersion" Text="v1.1.0" FontSize="16" Foreground="#64748b" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Network &amp; Systems Configuration Manager" FontSize="14" Foreground="#64748b" HorizontalAlignment="Center"/>
+                    <Separator Margin="0,8"/>
+                    <TextBlock TextWrapping="Wrap" TextAlignment="Center" FontSize="13" Foreground="#475569">
+NovaSCM è un tool di gestione infrastruttura cross-platform (Windows/Linux) basato su Avalonia UI.
+Supporta scansione rete, gestione PC fleet, integrazione Proxmox, script remoti, PKI/certificati e molto altro.
+                    </TextBlock>
+                    <Separator Margin="0,8"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="16">
+                        <TextBlock Text="Platform:" Foreground="#64748b"/>
+                        <TextBlock x:Name="TxtAboutPlatform" Text="—" Foreground="#3b82f6" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="16">
+                        <TextBlock Text="Runtime:" Foreground="#64748b"/>
+                        <TextBlock x:Name="TxtAboutRuntime" Text="—" Foreground="#3b82f6"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="16">
+                        <TextBlock Text="DB:" Foreground="#64748b"/>
+                        <TextBlock x:Name="TxtAboutDb" Text="—" Foreground="#64748b" FontSize="11"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+        </Grid>
+
+        <!-- ═══ STATUS BAR ════════════════════════════════════════════════ -->
+        <Border Grid.Row="2" Classes="statusbar" Padding="12,5">
+            <Grid ColumnDefinitions="*,Auto,Auto">
+                <TextBlock Grid.Column="0" x:Name="TxtGlobalStatus" Text="Pronto" Classes="status-text"/>
+                <TextBlock Grid.Column="1" x:Name="TxtPlatformLabel" Text="Windows" Classes="status-text" Margin="0,0,16,0"/>
+                <TextBlock Grid.Column="2" x:Name="TxtClock" Text="00:00:00" Classes="status-text"/>
+            </Grid>
+        </Border>
+
+    </Grid>
+</Window>
