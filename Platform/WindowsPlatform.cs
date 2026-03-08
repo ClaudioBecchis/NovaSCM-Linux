@@ -41,7 +41,8 @@ public class WindowsPlatform : IPlatform
     public void OpenRdp(string ip)
     {
         var startInfo = new ProcessStartInfo("mstsc") { UseShellExecute = true };
-        startInfo.ArgumentList.Add($"/v:{ip}");
+        startInfo.ArgumentList.Add("/v");
+        startInfo.ArgumentList.Add(ip);
         Process.Start(startInfo);
     }
 

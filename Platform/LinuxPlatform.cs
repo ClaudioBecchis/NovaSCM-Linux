@@ -44,15 +44,23 @@ public class LinuxPlatform : IPlatform
         try
         {
             var startInfo = new ProcessStartInfo("xfreerdp3") { UseShellExecute = true };
-            startInfo.ArgumentList.Add("/v:" + ip);
+            startInfo.ArgumentList.Add("/v:");
+            startInfo.ArgumentList.Add(ip);
             startInfo.ArgumentList.Add("/dynamic-resolution");
             Process.Start(startInfo);
         }
         catch
         {
+            var rdpUrl = "rdp://" + ip;
+            if (!Uri.TryCreate(rdpUrl, UriKind.Absolute, out var uri) || 
+                (uri.Scheme != "rdp"))
+            {
+                return;
+            }
+            // It is recommended to further restrict allowed hosts using a whitelist of known-safe domains.
             var startInfo = new ProcessStartInfo("remmina") { UseShellExecute = true };
             startInfo.ArgumentList.Add("-c");
-            startInfo.ArgumentList.Add("rdp://" + ip);
+            startInfo.ArgumentList.Add(uri.AbsoluteUri);
             Process.Start(startInfo);
         }
     }
