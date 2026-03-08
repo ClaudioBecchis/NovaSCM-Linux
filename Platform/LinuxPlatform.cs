@@ -41,20 +41,43 @@ public class LinuxPlatform : IPlatform
     public void OpenRdp(string ip)
     {
         // Prova xfreerdp, poi remmina
-        try { Process.Start(new ProcessStartInfo("xfreerdp3", $"/v:{ip} /dynamic-resolution") { UseShellExecute = true }); }
-        catch { Process.Start(new ProcessStartInfo("remmina", $"-c rdp://{ip}") { UseShellExecute = true }); }
+        try
+        {
+            var startInfo = new ProcessStartInfo("xfreerdp3") { UseShellExecute = true };
+            startInfo.ArgumentList.Add("/v:" + ip);
+            startInfo.ArgumentList.Add("/dynamic-resolution");
+            Process.Start(startInfo);
+        }
+        catch
+        {
+            var startInfo = new ProcessStartInfo("remmina") { UseShellExecute = true };
+            startInfo.ArgumentList.Add("-c");
+            startInfo.ArgumentList.Add("rdp://" + ip);
+            Process.Start(startInfo);
+        }
     }
 
     public void OpenSsh(string ip, string user)
     {
-        var cmd = $"ssh {user}@{ip}";
         // Prova terminali comuni
         foreach (var term in new[] { "gnome-terminal", "xterm", "konsole", "xfce4-terminal" })
         {
             try
             {
-                var args = term == "gnome-terminal" ? $"-- bash -c \"{cmd}; read\"" : $"-e \"{cmd}\"";
-                Process.Start(new ProcessStartInfo(term, args) { UseShellExecute = true });
+                var startInfo = new ProcessStartInfo(term) { UseShellExecute = true };
+                if (term == "gnome-terminal")
+                {
+                    startInfo.ArgumentList.Add("--");
+                    startInfo.ArgumentList.Add("bash");
+                    startInfo.ArgumentList.Add("-c");
+                    startInfo.ArgumentList.Add($"ssh {user}@{ip}; read");
+                }
+                else
+                {
+                    startInfo.ArgumentList.Add("-e");
+                    startInfo.ArgumentList.Add($"ssh {user}@{ip}");
+                }
+                Process.Start(startInfo);
                 return;
             }
             catch { }
