@@ -7,7 +7,8 @@ public class LinuxPlatform : IPlatform
     public string Name => "Linux";
     public bool IsWindows => false;
     public string ShellName => "bash";
-    public string ShellArgs(string script) => $"-c \"{script.Replace("\"", "\\\"")}\"";
+    // Passa il file direttamente a bash (nessun -c, nessun rischio di injection)
+    public string ShellArgs(string scriptFile) => scriptFile;
     public string GetDefaultSshKeyPath() =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".ssh", "id_ed25519");
 
@@ -27,7 +28,9 @@ public class LinuxPlatform : IPlatform
         var arp = GetArpTable();
         foreach (var line in arp.Split('\n'))
         {
-            if (!line.Contains(ip)) continue;
+            // Usa regex per evitare match parziali (es. "192.168.1.1" dentro "192.168.1.10")
+            if (!System.Text.RegularExpressions.Regex.IsMatch(line,
+                $@"(?<![0-9.]){System.Text.RegularExpressions.Regex.Escape(ip)}(?![0-9.])")) continue;
             var m = System.Text.RegularExpressions.Regex.Match(line,
                 @"([0-9a-f]{2}[:\-]){5}[0-9a-f]{2}", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
             if (m.Success) return m.Value.ToUpper();

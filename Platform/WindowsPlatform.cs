@@ -8,7 +8,8 @@ public class WindowsPlatform : IPlatform
     public string Name => "Windows";
     public bool IsWindows => true;
     public string ShellName => "powershell.exe";
-    public string ShellArgs(string script) => $"-ExecutionPolicy Bypass -Command \"{script}\"";
+    // -File invece di -Command: gestisce correttamente i percorsi senza rischio di injection
+    public string ShellArgs(string scriptFile) => $"-ExecutionPolicy Bypass -File \"{scriptFile}\"";
     public string GetDefaultSshKeyPath() =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".ssh", "id_ed25519");
 
@@ -26,7 +27,9 @@ public class WindowsPlatform : IPlatform
         var arp = GetArpTable();
         foreach (var line in arp.Split('\n'))
         {
-            if (!line.Contains(ip)) continue;
+            // Usa regex per evitare match parziali (es. "192.168.1.1" dentro "192.168.1.10")
+            if (!System.Text.RegularExpressions.Regex.IsMatch(line,
+                $@"(?<![0-9.]){System.Text.RegularExpressions.Regex.Escape(ip)}(?![0-9.])")) continue;
             var parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (var p in parts)
                 if (System.Text.RegularExpressions.Regex.IsMatch(p, @"([0-9a-f]{2}[:\-]){5}[0-9a-f]{2}", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
