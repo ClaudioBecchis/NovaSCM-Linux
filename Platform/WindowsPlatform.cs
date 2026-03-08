@@ -39,12 +39,25 @@ public class WindowsPlatform : IPlatform
     }
 
     public void OpenRdp(string ip)
-        => Process.Start(new ProcessStartInfo("mstsc", $"/v:{ip}") { UseShellExecute = true });
+    {
+        var startInfo = new ProcessStartInfo("mstsc") { UseShellExecute = true };
+        startInfo.ArgumentList.Add("/v:" + ip);
+        Process.Start(startInfo);
+    }
 
     public void OpenSsh(string ip, string user)
     {
-        var cmd = $"ssh {user}@{ip}";
-        try { Process.Start(new ProcessStartInfo("wt.exe", cmd) { UseShellExecute = true }); }
-        catch { Process.Start(new ProcessStartInfo("cmd.exe", $"/k {cmd}") { UseShellExecute = true }); }
+        var wtStartInfo = new ProcessStartInfo("wt.exe") { UseShellExecute = true };
+        wtStartInfo.ArgumentList.Add("ssh");
+        wtStartInfo.ArgumentList.Add(user + "@" + ip);
+        try { Process.Start(wtStartInfo); }
+        catch
+        {
+            var cmdStartInfo = new ProcessStartInfo("cmd.exe") { UseShellExecute = true };
+            cmdStartInfo.ArgumentList.Add("/k");
+            cmdStartInfo.ArgumentList.Add("ssh");
+            cmdStartInfo.ArgumentList.Add(user + "@" + ip);
+            Process.Start(cmdStartInfo);
+        }
     }
 }
