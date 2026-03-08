@@ -449,65 +449,82 @@ public partial class MainWindow : Window
         var token = TxtPveToken.Text?.Trim() ?? "";
         if (string.IsNullOrEmpty(host)) { SetStatus("⚠️ Inserisci l'host Proxmox"); return; }
         SetStatus("🔷 Connessione a Proxmox...");
+        PveLog("START", $"host={host} token={(!string.IsNullOrEmpty(token) ? "sì" : "no")}");
         try
         {
             using var handler = new HttpClientHandler { ServerCertificateCustomValidationCallback = (_, _, _, _) => true };
-            using var http = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) };
+            using var http = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(15) };
             HttpResponseMessage resp;
             if (!string.IsNullOrEmpty(token))
             {
+                PveLog("AUTH", "token mode");
                 http.DefaultRequestHeaders.Add("Authorization", $"PVEAPIToken={token}");
                 resp = await http.GetAsync($"{PveBase}/nodes");
             }
             else
             {
-                var user = Uri.EscapeDataString(TxtPveUser.Text?.Trim() ?? "");
-                var pass = Uri.EscapeDataString(TxtPvePass.Text ?? "");
+                var user = TxtPveUser.Text?.Trim() ?? "";
+                var pass = TxtPvePass.Text ?? "";
+                PveLog("AUTH", $"password mode user={user} passLen={pass.Length}");
                 var form = new StringContent($"username={user}&password={pass}",
                     System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
                 var loginResp = await http.PostAsync($"{PveBase}/access/ticket", form);
                 var loginJson = await loginResp.Content.ReadAsStringAsync();
+                PveLog("LOGIN", $"status={loginResp.StatusCode} body={loginJson[..Math.Min(200,loginJson.Length)]}");
                 var loginData = JsonDocument.Parse(loginJson);
                 var dataElem  = loginData.RootElement.GetProperty("data");
                 if (dataElem.ValueKind == JsonValueKind.Null)
                 {
                     var msg = loginData.RootElement.TryGetProperty("message", out var m) ? m.GetString() : "credenziali errate";
                     SetStatus($"❌ Proxmox: {msg}");
+                    PveLog("ERROR", $"data=null msg={msg}");
                     return;
                 }
                 _pveTicket = dataElem.GetProperty("ticket").GetString() ?? "";
                 _pveCsrf   = dataElem.GetProperty("CSRFPreventionToken").GetString() ?? "";
                 http.DefaultRequestHeaders.Add("Cookie", $"PVEAuthCookie={_pveTicket}");
                 http.DefaultRequestHeaders.Add("CSRFPreventionToken", _pveCsrf);
+                PveLog("TICKET", "ok, getting nodes");
                 resp = await http.GetAsync($"{PveBase}/nodes");
             }
             var nodesJson = await resp.Content.ReadAsStringAsync();
+            PveLog("NODES", $"status={resp.StatusCode} body={nodesJson[..Math.Min(200,nodesJson.Length)]}");
             var nodesDoc  = JsonDocument.Parse(nodesJson);
             var node      = nodesDoc.RootElement.GetProperty("data")[0].GetProperty("node").GetString() ?? "pve";
-            TxtPveNode.Text      = node;
-            PveNodeBar.IsVisible = true;
+            await Dispatcher.UIThread.InvokeAsync(() => {
+                TxtPveNode.Text      = node;
+                PveNodeBar.IsVisible = true;
+            });
             SetStatus($"✅ Connesso a Proxmox — nodo {node}");
+            PveLog("OK", $"node={node}");
             await LoadPveVmsAsync(http, node);
         }
         catch (Exception ex)
         {
             var detail = ex.InnerException?.Message ?? ex.Message;
             SetStatus($"❌ Proxmox: {detail}");
-            // Log su file
-            try { System.IO.File.AppendAllText("/tmp/novascm_pve.log",
-                $"[{DateTime.Now:HH:mm:ss}] {ex}\n"); } catch { }
+            PveLog("EXCEPTION", ex.ToString());
         }
+    }
+
+    private static void PveLog(string tag, string msg)
+    {
+        try { System.IO.File.AppendAllText("/tmp/novascm_pve.log",
+            $"[{DateTime.Now:HH:mm:ss}] [{tag}] {msg}\n"); } catch { }
     }
 
     private void BtnPveRefresh_Click(object? s, RoutedEventArgs e) => BtnPveConnect_Click(s, e);
 
     private async Task LoadPveVmsAsync(HttpClient http, string node)
     {
-        _pveRows.Clear();
+        await Dispatcher.UIThread.InvokeAsync(() => _pveRows.Clear());
+        var rows = new List<PveRow>();
         try
         {
             var vmResp = await http.GetAsync($"{PveBase}/nodes/{node}/qemu");
-            var vmDoc  = JsonDocument.Parse(await vmResp.Content.ReadAsStringAsync());
+            var vmJson = await vmResp.Content.ReadAsStringAsync();
+            PveLog("QEMU", $"status={vmResp.StatusCode} len={vmJson.Length}");
+            var vmDoc  = JsonDocument.Parse(vmJson);
             foreach (var vm in vmDoc.RootElement.GetProperty("data").EnumerateArray())
             {
                 var row = new PveRow
@@ -521,14 +538,16 @@ public partial class MainWindow : Window
                 };
                 if (vm.TryGetProperty("mem", out var mem) && vm.TryGetProperty("maxmem", out var maxm))
                     row.MemInfo = $"{mem.GetInt64()/1024/1024}MB/{maxm.GetInt64()/1024/1024}MB";
-                _pveRows.Add(row);
+                rows.Add(row);
             }
         }
-        catch { }
+        catch (Exception ex) { PveLog("QEMU_ERR", ex.Message); }
         try
         {
             var ctResp = await http.GetAsync($"{PveBase}/nodes/{node}/lxc");
-            var ctDoc  = JsonDocument.Parse(await ctResp.Content.ReadAsStringAsync());
+            var ctJson = await ctResp.Content.ReadAsStringAsync();
+            PveLog("LXC", $"status={ctResp.StatusCode} len={ctJson.Length}");
+            var ctDoc  = JsonDocument.Parse(ctJson);
             foreach (var ct in ctDoc.RootElement.GetProperty("data").EnumerateArray())
             {
                 var row = new PveRow
@@ -542,11 +561,15 @@ public partial class MainWindow : Window
                 };
                 if (ct.TryGetProperty("mem", out var mem) && ct.TryGetProperty("maxmem", out var maxm))
                     row.MemInfo = $"{mem.GetInt64()/1024/1024}MB/{maxm.GetInt64()/1024/1024}MB";
-                _pveRows.Add(row);
+                rows.Add(row);
             }
         }
-        catch { }
-        TxtPveNodeInfo.Text = $"{_pveRows.Count} VM/CT";
+        catch (Exception ex) { PveLog("LXC_ERR", ex.Message); }
+        await Dispatcher.UIThread.InvokeAsync(() => {
+            foreach (var r in rows) _pveRows.Add(r);
+            TxtPveNodeInfo.Text = $"{_pveRows.Count} VM/CT";
+        });
+        PveLog("LOADED", $"{rows.Count} righe");
     }
 
     private static string FormatUptime(long seconds)
