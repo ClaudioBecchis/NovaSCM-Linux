@@ -149,7 +149,7 @@
             <Grid x:Name="TabNet" RowDefinitions="Auto,*,Auto" IsVisible="True">
                 <!-- Toolbar -->
                 <Border Grid.Row="0" Background="White" Padding="12,10"
-                        BoxShadow="0 1 3 0 #1000000015">
+                        BoxShadow="0 1 3 0 #15000000">
                     <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto">
                         <Button Grid.Column="0" x:Name="BtnScan"    Classes="btn-primary"    Content="▶ Scansiona"     Click="BtnScan_Click"    Margin="0,0,8,0"/>
                         <Button Grid.Column="1" x:Name="BtnScanAll" Classes="btn-secondary"  Content="🌐 Tutte VLAN"   Click="BtnScanAll_Click" Margin="0,0,8,0"/>
@@ -220,7 +220,7 @@
 
                 <!-- Status bar scan -->
                 <Border Grid.Row="2" Background="White" Padding="12,6"
-                        BoxShadow="0 -1 3 0 #1000000015">
+                        BoxShadow="0 -1 3 0 #15000000">
                     <Grid ColumnDefinitions="*,Auto">
                         <TextBlock Grid.Column="0" x:Name="TxtScanStatus" Text="Pronto — configura la subnet e avvia la scansione." Classes="status-text"/>
                         <ProgressBar Grid.Column="1" x:Name="ScanProgress" Width="200" Height="6" Minimum="0" Maximum="100" Value="0"/>
@@ -231,7 +231,7 @@
             <!-- ── TAB PC FLEET ──────────────────────────────────────── -->
             <Grid x:Name="TabPc" RowDefinitions="Auto,*" IsVisible="False">
                 <Border Grid.Row="0" Background="White" Padding="12,10"
-                        BoxShadow="0 1 3 0 #1000000015">
+                        BoxShadow="0 1 3 0 #15000000">
                     <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto">
                         <Button Grid.Column="0" x:Name="BtnPcRefresh"  Classes="btn-primary"   Content="↺ Aggiorna"    Click="BtnPcRefresh_Click"  Margin="0,0,8,0"/>
                         <Button Grid.Column="1" x:Name="BtnPcAdd"      Classes="btn-secondary" Content="+ Aggiungi PC" Click="BtnPcAdd_Click"      Margin="0,0,8,0"/>
@@ -263,7 +263,7 @@
             <Grid x:Name="TabProxmox" RowDefinitions="Auto,Auto,*" IsVisible="False">
                 <!-- Config API -->
                 <Border Grid.Row="0" Background="White" Padding="12,10"
-                        BoxShadow="0 1 3 0 #1000000015">
+                        BoxShadow="0 1 3 0 #15000000">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <TextBlock Text="Host:" VerticalAlignment="Center" FontSize="13"/>
                         <TextBox x:Name="TxtPveHost"  Width="200" Text="192.168.10.201" CornerRadius="6" Padding="8,6"/>
@@ -335,7 +335,7 @@
             <!-- ── TAB SCRIPT ────────────────────────────────────────── -->
             <Grid x:Name="TabScripts" RowDefinitions="Auto,*" IsVisible="False">
                 <Border Grid.Row="0" Background="White" Padding="12,10"
-                        BoxShadow="0 1 3 0 #1000000015">
+                        BoxShadow="0 1 3 0 #15000000">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <Button x:Name="BtnScriptNew"    Classes="btn-primary"   Content="+ Nuovo"    Click="BtnScriptNew_Click"/>
                         <Button x:Name="BtnScriptDelete" Classes="btn-danger"    Content="✕ Elimina"  Click="BtnScriptDelete_Click"/>
@@ -390,7 +390,7 @@
             <!-- ── TAB CERTIFICATI ───────────────────────────────────── -->
             <Grid x:Name="TabCerts" RowDefinitions="Auto,*" IsVisible="False">
                 <Border Grid.Row="0" Background="White" Padding="12,10"
-                        BoxShadow="0 1 3 0 #1000000015">
+                        BoxShadow="0 1 3 0 #15000000">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <Button x:Name="BtnCertRefresh" Classes="btn-primary"   Content="↺ Aggiorna"         Click="BtnCertRefresh_Click"/>
                         <Button x:Name="BtnCertRevoke"  Classes="btn-danger"    Content="✕ Revoca selezionato" Click="BtnCertRevoke_Click"/>
@@ -419,7 +419,7 @@
 
                     <!-- NovaSCM Server -->
                     <Border Background="White" CornerRadius="8" Padding="16"
-                            BoxShadow="0 1 3 0 #1000000015">
+                            BoxShadow="0 1 3 0 #15000000">
                         <StackPanel Spacing="10">
                             <TextBlock Text="NovaSCM Server" FontWeight="SemiBold" FontSize="14"/>
                             <TextBlock Classes="section-label" Text="URL API NovaSCM"/>
@@ -429,7 +429,7 @@
 
                     <!-- Rete -->
                     <Border Background="White" CornerRadius="8" Padding="16"
-                            BoxShadow="0 1 3 0 #1000000015">
+                            BoxShadow="0 1 3 0 #15000000">
                         <StackPanel Spacing="10">
                             <TextBlock Text="Scansione Rete" FontWeight="SemiBold" FontSize="14"/>
                             <TextBlock Classes="section-label" Text="IP BASE DEFAULT"/>
@@ -444,7 +444,7 @@
 
                     <!-- UniFi -->
                     <Border Background="White" CornerRadius="8" Padding="16"
-                            BoxShadow="0 1 3 0 #1000000015">
+                            BoxShadow="0 1 3 0 #15000000">
                         <StackPanel Spacing="10">
                             <TextBlock Text="UniFi Controller" FontWeight="SemiBold" FontSize="14"/>
                             <TextBlock Classes="section-label" Text="URL CONTROLLER"/>
@@ -458,7 +458,7 @@
 
                     <!-- Certportal -->
                     <Border Background="White" CornerRadius="8" Padding="16"
-                            BoxShadow="0 1 3 0 #1000000015">
+                            BoxShadow="0 1 3 0 #15000000">
                         <StackPanel Spacing="10">
                             <TextBlock Text="Certportal / PKI" FontWeight="SemiBold" FontSize="14"/>
                             <TextBlock Classes="section-label" Text="URL CERTPORTAL"/>
@@ -478,7 +478,7 @@
 
                     <!-- Credenziali admin -->
                     <Border Background="White" CornerRadius="8" Padding="16"
-                            BoxShadow="0 1 3 0 #1000000015">
+                            BoxShadow="0 1 3 0 #15000000">
                         <StackPanel Spacing="10">
                             <TextBlock Text="Credenziali Amministratore" FontWeight="SemiBold" FontSize="14"/>
                             <TextBlock Classes="section-label" Text="UTENTE SSH/ADMIN"/>

@@ -1,0 +1,5 @@
+C:\Temp\NovaSCM_linux_x64\NovaSCM.pdb
+C:\Temp\NovaSCM_linux_x64\libHarfBuzzSharp.so
+C:\Temp\NovaSCM_linux_x64\libSkiaSharp.so
+C:\Temp\NovaSCM_linux_x64\libe_sqlite3.so
+C:\Temp\NovaSCM_linux_x64\NovaSCM

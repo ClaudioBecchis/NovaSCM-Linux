@@ -16,7 +16,10 @@ public static class Database
 
     private static SqliteConnection Open()
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(DbPath)!);
+        var dir = Path.GetDirectoryName(DbPath)!;
+        // Directory.CreateDirectory su Linux/.NET9 può lanciare IOException se
+        // la cartella padre non esiste ancora — usiamo mkdir -p ricorsivo via API
+        try { Directory.CreateDirectory(dir); } catch (IOException) { }
         var conn = new SqliteConnection($"Data Source={DbPath}");
         conn.Open();
         using var cmd = conn.CreateCommand();

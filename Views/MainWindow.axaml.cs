@@ -164,7 +164,7 @@ public partial class MainWindow : Window
         _config.Domain        = TxtDomain.Text?.Trim() ?? "";
         _config.AdminUser     = TxtAdminUser.Text?.Trim() ?? "";
         _config.AdminPass     = TxtAdminPass.Text ?? "";
-        Directory.CreateDirectory(Path.GetDirectoryName(ConfigPath)!);
+        var _d = Path.GetDirectoryName(ConfigPath)!; if (!Directory.Exists(_d)) Directory.CreateDirectory(_d);
         File.WriteAllText(ConfigPath,
             JsonSerializer.Serialize(_config, new JsonSerializerOptions { WriteIndented = true }));
         TxtScanIp.Text       = _config.ScanNetwork;
