@@ -56,6 +56,15 @@ internal static class DeployBuilders
 
         var rsSb  = new StringBuilder();
         int rsOrd = 1;
+
+        // Priorità boot: Windows Boot Manager prima di USB/ISO — evita che al riavvio riparta dall'ISO
+        rsSb.Append($@"
+        <RunSynchronousCommand wcm:action=""add"">
+          <Order>{rsOrd++}</Order>
+          <Path>bcdedit /set {{fwbootmgr}} displayorder {{bootmgr}} /addfirst</Path>
+          <Description>Priorita' boot da disco — non da USB/ISO</Description>
+        </RunSynchronousCommand>");
+
         if (!cfg.UseMicrosoftAccount && cfg.DomainJoin != "AD")
             rsSb.Append($@"
         <RunSynchronousCommand wcm:action=""add"">

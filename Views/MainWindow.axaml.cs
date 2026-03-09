@@ -931,7 +931,12 @@ public partial class MainWindow : Window
         TxtDeployStatus.Foreground = Avalonia.Media.Brushes.Green;
         TxtDeployStatus.Text =
             $"✅  File generati — {cfg.WinEdition} · {cfg.WingetPackages.Count} software · " +
-            $"{(cfg.IncludeAgent ? "agente incluso" : "senza agente")}\n" +
+            $"{(cfg.IncludeAgent ? "agente incluso" : "senza agente")}\n\n" +
+            "⚠️  Il PC si riavvierà 2-3 volte — è NORMALE, non spegnere.\n\n" +
+            "📋  Fasi automatiche:\n" +
+            "     Fase 1 — Setup Windows copia i file        (~10 min) → riavvio\n" +
+            "     Fase 2 — Configurazione sistema             (~ 5 min) → riavvio\n" +
+            "     Fase 3 — Post-install: software + agente   (~ 5 min) → riavvio finale\n\n" +
             "💡  Per USB: copia autounattend.xml + postinstall.ps1 nella radice della chiavetta insieme all'ISO Windows.";
     }
 
