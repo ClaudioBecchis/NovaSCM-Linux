@@ -869,6 +869,56 @@ public partial class MainWindow : Window
 
     // ── Deploy tab ────────────────────────────────────────────────────────────
     private string? _deployTmpDir;
+    private System.Threading.Timer? _deployInstallTimer;
+    private DateTime _deployInstallStart;
+
+    private void StartDeployInstallTimer()
+    {
+        _deployInstallStart = DateTime.Now;
+        PnlDeployTimer.IsVisible = true;
+        _deployInstallTimer?.Dispose();
+        _deployInstallTimer = new System.Threading.Timer(_ =>
+            Avalonia.Threading.Dispatcher.UIThread.Post(UpdateDeployInstallTimer),
+            null, 0, 1000);
+    }
+
+    private void UpdateDeployInstallTimer()
+    {
+        var elapsed = DateTime.Now - _deployInstallStart;
+        TxtDeployElapsed.Text = $"⏱  {elapsed:mm\\:ss}  trascorsi";
+        var min = elapsed.TotalMinutes;
+
+        TxtDeployPhase1.Foreground = min < 10
+            ? Avalonia.Media.Brushes.White
+            : new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#22c55e"));
+        TxtDeployPhase2.Foreground = min is >= 10 and < 15
+            ? Avalonia.Media.Brushes.White
+            : (min >= 15 ? new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#22c55e"))
+                         : new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#94a3b8")));
+        TxtDeployPhase3.Foreground = min >= 15
+            ? Avalonia.Media.Brushes.White
+            : new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#94a3b8"));
+
+        TxtDeployPhase1.Text = min < 10
+            ? "▶ Fase 1 — Setup Windows copia file       (~10 min)  ← IN CORSO"
+            : "✅ Fase 1 — Setup Windows copia file";
+        TxtDeployPhase2.Text = min is >= 10 and < 15
+            ? "▶ Fase 2 — Configurazione sistema          (~ 5 min)  ← IN CORSO"
+            : (min >= 15 ? "✅ Fase 2 — Configurazione sistema"
+                         : "   Fase 2 — Configurazione sistema          (~ 5 min)");
+        TxtDeployPhase3.Text = min >= 15
+            ? "▶ Fase 3 — Post-install: software+agente  (~ 5 min)  ← IN CORSO"
+            : "   Fase 3 — Post-install: software+agente  (~ 5 min)";
+
+        if (min >= 20)
+        {
+            _deployInstallTimer?.Dispose();
+            TxtDeployPhase3.Text = "✅ Fase 3 — Post-install completato";
+            TxtDeployElapsed.Text = $"✅  Installazione completata in {elapsed:mm\\:ss}";
+            PbDeployTimer.IsIndeterminate = false;
+            PbDeployTimer.Value = 100;
+        }
+    }
 
     private DeployConfig BuildDeployConfigFromUi()
     {
@@ -968,6 +1018,7 @@ public partial class MainWindow : Window
     private void BtnDeployUsb_Click(object? s, RoutedEventArgs e)
     {
         if (_deployTmpDir == null) return;
+        StartDeployInstallTimer();
         var usbPaths = new List<string>();
         if (App.Platform.IsWindows)
         {
@@ -1009,6 +1060,7 @@ public partial class MainWindow : Window
     private async void BtnDeployPxe_Click(object? s, RoutedEventArgs e)
     {
         if (_deployTmpDir == null) return;
+        StartDeployInstallTimer();
         var cfg     = BuildDeployConfigFromUi();
         var pxeIp   = cfg.PxeServerIp;
         var pxePath = cfg.PxeServerPath;

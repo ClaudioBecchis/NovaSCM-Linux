@@ -573,6 +573,20 @@
 
                             <!-- Status -->
                             <TextBlock x:Name="TxtDeployStatus" Text="" TextWrapping="Wrap" FontSize="12" Foreground="#16a34a" Margin="0,4,0,0"/>
+
+                            <!-- Timer installazione (visibile dopo USB/PXE) -->
+                            <StackPanel x:Name="PnlDeployTimer" IsVisible="False" Margin="0,10,0,0" Spacing="4">
+                                <Separator Margin="0,0,0,4"/>
+                                <ProgressBar x:Name="PbDeployTimer" IsIndeterminate="True" Height="4" Margin="0,0,0,4"/>
+                                <TextBlock x:Name="TxtDeployElapsed" FontSize="12" Foreground="#94a3b8" HorizontalAlignment="Center" Text="00:00"/>
+                                <Border Background="#0f172a" CornerRadius="6" Padding="10,8" Margin="0,4,0,0">
+                                    <StackPanel Spacing="5">
+                                        <TextBlock x:Name="TxtDeployPhase1" FontSize="11" FontFamily="Consolas,Monospace" Foreground="#94a3b8" Text="   Fase 1 — Setup Windows copia file       (~10 min)"/>
+                                        <TextBlock x:Name="TxtDeployPhase2" FontSize="11" FontFamily="Consolas,Monospace" Foreground="#94a3b8" Text="   Fase 2 — Configurazione sistema          (~ 5 min)"/>
+                                        <TextBlock x:Name="TxtDeployPhase3" FontSize="11" FontFamily="Consolas,Monospace" Foreground="#94a3b8" Text="   Fase 3 — Post-install: software+agente  (~ 5 min)"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
                         </StackPanel>
                     </ScrollViewer>
                 </Border>
