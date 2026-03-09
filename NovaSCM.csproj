@@ -8,6 +8,7 @@
     <Product>NovaSCM</Product>
     <Version>1.1.0</Version>
     <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
 
   <!-- Windows only -->
