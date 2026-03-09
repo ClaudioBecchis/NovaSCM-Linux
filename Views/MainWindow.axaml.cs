@@ -452,7 +452,14 @@ public partial class MainWindow : Window
         PveLog("START", $"host={host} token={(!string.IsNullOrEmpty(token) ? "sì" : "no")}");
         try
         {
-            using var handler = new HttpClientHandler { ServerCertificateCustomValidationCallback = (_, _, _, _) => true };
+            // NEW-C: accetta solo self-signed (UntrustedRoot); blocca scaduti, revocati, hostname errati
+            using var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (_, _, chain, errors) =>
+                    errors == System.Net.Security.SslPolicyErrors.None ||
+                    (errors == System.Net.Security.SslPolicyErrors.RemoteCertificateChainErrors &&
+                     chain?.ChainStatus.All(s => s.Status == System.Security.Cryptography.X509Certificates.X509ChainStatusFlags.UntrustedRoot) == true)
+            };
             using var http = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(15) };
             HttpResponseMessage resp;
             if (!string.IsNullOrEmpty(token))
@@ -618,7 +625,14 @@ public partial class MainWindow : Window
     {
         try
         {
-            using var handler = new HttpClientHandler { ServerCertificateCustomValidationCallback = (_, _, _, _) => true };
+            // NEW-C: accetta solo self-signed (UntrustedRoot); blocca scaduti, revocati, hostname errati
+            using var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (_, _, chain, errors) =>
+                    errors == System.Net.Security.SslPolicyErrors.None ||
+                    (errors == System.Net.Security.SslPolicyErrors.RemoteCertificateChainErrors &&
+                     chain?.ChainStatus.All(s => s.Status == System.Security.Cryptography.X509Certificates.X509ChainStatusFlags.UntrustedRoot) == true)
+            };
             using var http = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(15) };
             var token = TxtPveToken.Text?.Trim() ?? "";
             if (!string.IsNullOrEmpty(token))
