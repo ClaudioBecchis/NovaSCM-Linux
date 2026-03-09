@@ -133,6 +133,7 @@
                     <Button x:Name="BtnTabProxmox" Classes="tab-btn"        Content="🔷 Proxmox"  Click="BtnTabProxmox_Click"/>
                     <Button x:Name="BtnTabScripts" Classes="tab-btn"        Content="📜 Script"   Click="BtnTabScripts_Click"/>
                     <Button x:Name="BtnTabCerts"   Classes="tab-btn"        Content="🔐 Certificati" Click="BtnTabCerts_Click"/>
+                    <Button x:Name="BtnTabDeploy"  Classes="tab-btn"        Content="💿 Deploy"   Click="BtnTabDeploy_Click"/>
                     <Button x:Name="BtnTabSettings" Classes="tab-btn"       Content="⚙️ Impostazioni" Click="BtnTabSettings_Click"/>
                     <Button x:Name="BtnTabAbout"   Classes="tab-btn"        Content="ℹ️ About"    Click="BtnTabAbout_Click"/>
                 </StackPanel>
@@ -497,6 +498,102 @@
                     <TextBlock x:Name="TxtSettingsStatus" Text="" FontSize="13"/>
                 </StackPanel>
             </ScrollViewer>
+
+            <!-- ── TAB DEPLOY ────────────────────────────────────────── -->
+            <Grid x:Name="TabDeploy" ColumnDefinitions="320,*" IsVisible="False">
+
+                <!-- Colonna sinistra: form configurazione -->
+                <Border Grid.Column="0" Background="White" Margin="0,0,1,0">
+                    <ScrollViewer>
+                        <StackPanel Margin="14" Spacing="8">
+                            <TextBlock Text="💿 Deploy Windows" FontWeight="SemiBold" FontSize="15" Foreground="#1e293b" Margin="0,0,0,4"/>
+
+                            <!-- Windows Edition -->
+                            <TextBlock Classes="section-label" Text="EDIZIONE WINDOWS"/>
+                            <ComboBox x:Name="CmbDeployEdition" SelectedIndex="0" HorizontalAlignment="Stretch">
+                                <ComboBoxItem Content="Windows 11 Pro"/>
+                                <ComboBoxItem Content="Windows 11 Home"/>
+                                <ComboBoxItem Content="Windows 11 Enterprise"/>
+                                <ComboBoxItem Content="Windows 10 Pro"/>
+                                <ComboBoxItem Content="Windows Server 2022 Standard"/>
+                            </ComboBox>
+
+                            <!-- PC Name + Locale -->
+                            <TextBlock Classes="section-label" Text="NOME PC (template)"/>
+                            <TextBox x:Name="TxtDeployPcName" Text="PC-{MAC6}" CornerRadius="6" Padding="8,6"/>
+                            <TextBlock Classes="section-label" Text="LINGUA"/>
+                            <ComboBox x:Name="CmbDeployLocale" SelectedIndex="0" HorizontalAlignment="Stretch">
+                                <ComboBoxItem Content="it-IT"/>
+                                <ComboBoxItem Content="en-US"/>
+                                <ComboBoxItem Content="en-GB"/>
+                                <ComboBoxItem Content="fr-FR"/>
+                                <ComboBoxItem Content="de-DE"/>
+                            </ComboBox>
+
+                            <!-- Credenziali -->
+                            <TextBlock Classes="section-label" Text="PASSWORD AMMINISTRATORE *" Margin="0,6,0,0"/>
+                            <TextBox x:Name="TxtDeployAdminPass" PasswordChar="●" CornerRadius="6" Padding="8,6" Watermark="richiesta"/>
+                            <TextBlock Classes="section-label" Text="UTENTE STANDARD (opzionale)"/>
+                            <TextBox x:Name="TxtDeployUserName" CornerRadius="6" Padding="8,6" Watermark="es: utente"/>
+                            <TextBox x:Name="TxtDeployUserPass" PasswordChar="●" CornerRadius="6" Padding="8,6" Watermark="password utente"/>
+
+                            <!-- Software -->
+                            <TextBlock Classes="section-label" Text="SOFTWARE WINGET" Margin="0,6,0,0"/>
+                            <WrapPanel Orientation="Horizontal">
+                                <CheckBox x:Name="ChkFirefox"    Content="Firefox"    IsChecked="True"  Margin="0,2,10,2"/>
+                                <CheckBox x:Name="ChkVlc"        Content="VLC"        IsChecked="True"  Margin="0,2,10,2"/>
+                                <CheckBox x:Name="ChkSevenZip"   Content="7-Zip"      IsChecked="True"  Margin="0,2,10,2"/>
+                                <CheckBox x:Name="ChkNotepadpp"  Content="Notepad++"  IsChecked="False" Margin="0,2,10,2"/>
+                                <CheckBox x:Name="ChkVscode"     Content="VS Code"    IsChecked="False" Margin="0,2,10,2"/>
+                                <CheckBox x:Name="ChkChrome"     Content="Chrome"     IsChecked="False" Margin="0,2,10,2"/>
+                                <CheckBox x:Name="ChkOnlyoffice" Content="OnlyOffice" IsChecked="False" Margin="0,2,10,2"/>
+                            </WrapPanel>
+                            <TextBlock Classes="section-label" Text="ALTRI PACCHETTI (uno per riga, ID winget)"/>
+                            <TextBox x:Name="TxtDeployExtraPkgs" AcceptsReturn="True" Height="52"
+                                     TextWrapping="Wrap" CornerRadius="6" Padding="8,6"
+                                     Watermark="es: Notepad++.Notepad++"/>
+
+                            <!-- NovaSCM Agent -->
+                            <CheckBox x:Name="ChkDeployAgent" Content="Includi agente NovaSCM (WiFi + Workflow)" IsChecked="True" Margin="0,6,0,0"/>
+                            <TextBlock Classes="section-label" Text="URL SERVER NOVASCM"/>
+                            <TextBox x:Name="TxtDeployServerUrl" CornerRadius="6" Padding="8,6" Watermark="http://192.168.20.110:9090"/>
+
+                            <!-- PXE -->
+                            <TextBlock Classes="section-label" Text="PXE SERVER IP" Margin="0,6,0,0"/>
+                            <TextBox x:Name="TxtDeployPxeIp" Text="192.168.10.122" CornerRadius="6" Padding="8,6"/>
+                            <TextBlock Classes="section-label" Text="PXE PATH"/>
+                            <TextBox x:Name="TxtDeployPxePath" Text="/srv/netboot/novascm/" CornerRadius="6" Padding="8,6"/>
+
+                            <!-- Pulsanti -->
+                            <Separator Margin="0,6"/>
+                            <Button x:Name="BtnDeployGenerate" Classes="btn-success"   Content="⚙️ Genera file"   Click="BtnDeployGenerate_Click" HorizontalAlignment="Stretch"/>
+                            <Button x:Name="BtnDeploySave"     Classes="btn-primary"   Content="💾 Salva cartella" Click="BtnDeploySave_Click"    IsEnabled="False" HorizontalAlignment="Stretch"/>
+                            <Button x:Name="BtnDeployUsb"      Classes="btn-secondary" Content="🖴 Scrivi su USB"  Click="BtnDeployUsb_Click"     IsEnabled="False" HorizontalAlignment="Stretch"/>
+                            <Button x:Name="BtnDeployPxe"      Classes="btn-primary"   Content="🌐 Deploy PXE"    Click="BtnDeployPxe_Click"     IsEnabled="False" HorizontalAlignment="Stretch"/>
+
+                            <!-- Status -->
+                            <TextBlock x:Name="TxtDeployStatus" Text="" TextWrapping="Wrap" FontSize="12" Foreground="#16a34a" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+
+                <!-- Colonna destra: preview XML -->
+                <Grid Grid.Column="1" RowDefinitions="Auto,*">
+                    <Border Grid.Row="0" Background="White" Padding="12,8" BoxShadow="0 1 3 0 #15000000">
+                        <TextBlock Text="Preview autounattend.xml" FontWeight="SemiBold" FontSize="13" Foreground="#1e293b"/>
+                    </Border>
+                    <Border Grid.Row="1" Background="#0f172a">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto">
+                            <TextBox x:Name="TxtDeployPreview"
+                                     IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap"
+                                     FontFamily="Consolas,Courier New,monospace"
+                                     FontSize="12" Background="Transparent" Foreground="#86efac"
+                                     BorderThickness="0" Padding="12"
+                                     Watermark="— clicca Genera file per vedere l'anteprima —"/>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </Grid>
 
             <!-- ── TAB ABOUT ─────────────────────────────────────────── -->
             <Grid x:Name="TabAbout" IsVisible="False">

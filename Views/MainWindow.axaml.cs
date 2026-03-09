@@ -85,6 +85,7 @@ public partial class MainWindow : Window
         TabProxmox.IsVisible  = name == "Proxmox";
         TabScripts.IsVisible  = name == "Scripts";
         TabCerts.IsVisible    = name == "Certs";
+        TabDeploy.IsVisible   = name == "Deploy";
         TabSettings.IsVisible = name == "Settings";
         TabAbout.IsVisible    = name == "About";
         UpdateTabButtons(name);
@@ -98,6 +99,7 @@ public partial class MainWindow : Window
             (BtnTabProxmox,  "Proxmox"),
             (BtnTabScripts,  "Scripts"),
             (BtnTabCerts,    "Certs"),
+            (BtnTabDeploy,   "Deploy"),
             (BtnTabSettings, "Settings"),
             (BtnTabAbout,    "About"),
         };
@@ -113,6 +115,7 @@ public partial class MainWindow : Window
     private void BtnTabProxmox_Click(object? s, RoutedEventArgs e)  => SetActiveTab("Proxmox");
     private void BtnTabScripts_Click(object? s, RoutedEventArgs e)  => SetActiveTab("Scripts");
     private void BtnTabCerts_Click(object? s, RoutedEventArgs e)    => SetActiveTab("Certs");
+    private void BtnTabDeploy_Click(object? s, RoutedEventArgs e)   => SetActiveTab("Deploy");
     private void BtnTabSettings_Click(object? s, RoutedEventArgs e) => SetActiveTab("Settings");
     private void BtnTabAbout_Click(object? s, RoutedEventArgs e)    => SetActiveTab("About");
 
@@ -862,5 +865,187 @@ public partial class MainWindow : Window
         }
         catch { }
         return "—";
+    }
+
+    // ── Deploy tab ────────────────────────────────────────────────────────────
+    private string? _deployTmpDir;
+
+    private DeployConfig BuildDeployConfigFromUi()
+    {
+        var editions = new[] {
+            "Windows 11 Pro", "Windows 11 Home", "Windows 11 Enterprise",
+            "Windows 10 Pro", "Windows Server 2022 Standard"
+        };
+        var locales  = new[] { "it-IT", "en-US", "en-GB", "fr-FR", "de-DE" };
+        var edition  = CmbDeployEdition.SelectedIndex >= 0 && CmbDeployEdition.SelectedIndex < editions.Length
+                       ? editions[CmbDeployEdition.SelectedIndex] : "Windows 11 Pro";
+        var locale   = CmbDeployLocale.SelectedIndex >= 0 && CmbDeployLocale.SelectedIndex < locales.Length
+                       ? locales[CmbDeployLocale.SelectedIndex] : "it-IT";
+        var pkgs = new List<string>();
+        if (ChkFirefox.IsChecked    == true) pkgs.Add("Mozilla.Firefox");
+        if (ChkVlc.IsChecked        == true) pkgs.Add("VideoLAN.VLC");
+        if (ChkSevenZip.IsChecked   == true) pkgs.Add("7zip.7zip");
+        if (ChkNotepadpp.IsChecked  == true) pkgs.Add("Notepad++.Notepad++");
+        if (ChkVscode.IsChecked     == true) pkgs.Add("Microsoft.VisualStudioCode");
+        if (ChkChrome.IsChecked     == true) pkgs.Add("Google.Chrome");
+        if (ChkOnlyoffice.IsChecked == true) pkgs.Add("ONLYOFFICE.DesktopEditors");
+        foreach (var line in (TxtDeployExtraPkgs.Text ?? "")
+                     .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            if (!string.IsNullOrEmpty(line)) pkgs.Add(line);
+
+        return new DeployConfig
+        {
+            WinEdition     = edition,
+            PcNameTemplate = TxtDeployPcName.Text?.Trim() ?? "PC-{MAC6}",
+            Locale         = locale,
+            AdminPassword  = TxtDeployAdminPass.Text ?? "",
+            UserName       = TxtDeployUserName.Text?.Trim() ?? "",
+            UserPassword   = TxtDeployUserPass.Text ?? "",
+            WingetPackages = pkgs,
+            IncludeAgent   = ChkDeployAgent.IsChecked == true,
+            ServerUrl      = TxtDeployServerUrl.Text?.Trim() ?? "",
+            PxeServerIp    = TxtDeployPxeIp.Text?.Trim() ?? "",
+            PxeServerPath  = TxtDeployPxePath.Text?.Trim() ?? "/srv/netboot/novascm/",
+        };
+    }
+
+    private void BtnDeployGenerate_Click(object? s, RoutedEventArgs e)
+    {
+        var cfg = BuildDeployConfigFromUi();
+        if (string.IsNullOrEmpty(cfg.AdminPassword))
+        {
+            TxtDeployStatus.Text = "⚠️  Inserisci la password Amministratore";
+            TxtDeployStatus.Foreground = Avalonia.Media.Brushes.Orange;
+            return;
+        }
+        var xml = DeployBuilders.BuildAutounattendXml(cfg);
+        var ps1 = DeployBuilders.BuildPostInstallScript(cfg);
+        _deployTmpDir = Path.Combine(Path.GetTempPath(), "NovaSCM_Deploy");
+        Directory.CreateDirectory(_deployTmpDir);
+        File.WriteAllText(Path.Combine(_deployTmpDir, "autounattend.xml"), xml, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(_deployTmpDir, "postinstall.ps1"),  ps1, System.Text.Encoding.UTF8);
+        TxtDeployPreview.Text = xml;
+        BtnDeploySave.IsEnabled = true;
+        BtnDeployUsb.IsEnabled  = true;
+        BtnDeployPxe.IsEnabled  = true;
+        TxtDeployStatus.Foreground = Avalonia.Media.Brushes.Green;
+        TxtDeployStatus.Text =
+            $"✅  File generati — {cfg.WinEdition} · {cfg.WingetPackages.Count} software · " +
+            $"{(cfg.IncludeAgent ? "agente incluso" : "senza agente")}\n" +
+            "💡  Per USB: copia autounattend.xml + postinstall.ps1 nella radice della chiavetta insieme all'ISO Windows.";
+    }
+
+    private async void BtnDeploySave_Click(object? s, RoutedEventArgs e)
+    {
+        if (_deployTmpDir == null) return;
+        try
+        {
+            var folders = await TopLevel.GetTopLevel(this)!.StorageProvider.OpenFolderPickerAsync(
+                new Avalonia.Platform.Storage.FolderPickerOpenOptions
+                {
+                    Title = "Seleziona cartella dove salvare autounattend.xml e postinstall.ps1",
+                    AllowMultiple = false,
+                });
+            if (folders.Count == 0) return;
+            var dst = folders[0].Path.LocalPath;
+            File.Copy(Path.Combine(_deployTmpDir, "autounattend.xml"), Path.Combine(dst, "autounattend.xml"), overwrite: true);
+            File.Copy(Path.Combine(_deployTmpDir, "postinstall.ps1"),  Path.Combine(dst, "postinstall.ps1"),  overwrite: true);
+            TxtDeployStatus.Foreground = Avalonia.Media.Brushes.Green;
+            TxtDeployStatus.Text = $"💾  File salvati in: {dst}";
+        }
+        catch (Exception ex)
+        {
+            TxtDeployStatus.Foreground = Avalonia.Media.Brushes.OrangeRed;
+            TxtDeployStatus.Text = $"❌  {ex.Message}";
+        }
+    }
+
+    private void BtnDeployUsb_Click(object? s, RoutedEventArgs e)
+    {
+        if (_deployTmpDir == null) return;
+        var usbPaths = new List<string>();
+        if (App.Platform.IsWindows)
+        {
+            usbPaths = DriveInfo.GetDrives()
+                .Where(d => d.DriveType == DriveType.Removable && d.IsReady)
+                .Select(d => d.RootDirectory.FullName)
+                .ToList();
+        }
+        else
+        {
+            // Linux: /media/USER/*, /run/media/USER/*, /mnt/*
+            var user = Environment.UserName;
+            foreach (var root in new[] { $"/media/{user}", $"/run/media/{user}", "/mnt" })
+                if (Directory.Exists(root))
+                    foreach (var dir in Directory.GetDirectories(root))
+                        usbPaths.Add(dir);
+        }
+        if (usbPaths.Count == 0)
+        {
+            TxtDeployStatus.Foreground = Avalonia.Media.Brushes.Orange;
+            TxtDeployStatus.Text = "⚠️  Nessuna USB trovata. Inserisci la chiavetta e riprova.";
+            return;
+        }
+        var drive = usbPaths[0];
+        try
+        {
+            File.Copy(Path.Combine(_deployTmpDir, "autounattend.xml"), Path.Combine(drive, "autounattend.xml"), overwrite: true);
+            File.Copy(Path.Combine(_deployTmpDir, "postinstall.ps1"),  Path.Combine(drive, "postinstall.ps1"),  overwrite: true);
+            TxtDeployStatus.Foreground = Avalonia.Media.Brushes.Green;
+            TxtDeployStatus.Text = $"🖴  File copiati su {drive}\nPasso successivo: copia i file dell'ISO Windows sulla stessa USB.";
+        }
+        catch (Exception ex)
+        {
+            TxtDeployStatus.Foreground = Avalonia.Media.Brushes.OrangeRed;
+            TxtDeployStatus.Text = $"❌  Errore USB: {ex.Message}";
+        }
+    }
+
+    private async void BtnDeployPxe_Click(object? s, RoutedEventArgs e)
+    {
+        if (_deployTmpDir == null) return;
+        var cfg     = BuildDeployConfigFromUi();
+        var pxeIp   = cfg.PxeServerIp;
+        var pxePath = cfg.PxeServerPath;
+        var keyPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".ssh", "id_ed25519");
+        TxtDeployStatus.Foreground = Avalonia.Media.Brushes.Yellow;
+        TxtDeployStatus.Text       = $"⏳  Upload su PXE {pxeIp}...";
+        BtnDeployPxe.IsEnabled     = false;
+        try
+        {
+            await Task.Run(() =>
+            {
+                foreach (var file in new[] { "autounattend.xml", "postinstall.ps1" })
+                {
+                    var src = Path.Combine(_deployTmpDir!, file);
+                    var scpInfo = new ProcessStartInfo("scp")
+                    {
+                        UseShellExecute        = false,
+                        RedirectStandardError  = true,
+                        CreateNoWindow         = true,
+                    };
+                    scpInfo.ArgumentList.Add("-i");
+                    scpInfo.ArgumentList.Add(keyPath);
+                    scpInfo.ArgumentList.Add("-o");
+                    scpInfo.ArgumentList.Add("StrictHostKeyChecking=accept-new");
+                    scpInfo.ArgumentList.Add(src);
+                    scpInfo.ArgumentList.Add($"root@{pxeIp}:{pxePath}{file}");
+                    using var proc = Process.Start(scpInfo)!;
+                    proc.WaitForExit(30_000);
+                    if (proc.ExitCode != 0)
+                        throw new Exception($"scp {file} fallito (exit {proc.ExitCode}): " +
+                                            proc.StandardError.ReadToEnd());
+                }
+            });
+            TxtDeployStatus.Foreground = Avalonia.Media.Brushes.Green;
+            TxtDeployStatus.Text       = $"🌐  File copiati su {pxeIp}:{pxePath}";
+        }
+        catch (Exception ex)
+        {
+            TxtDeployStatus.Foreground = Avalonia.Media.Brushes.OrangeRed;
+            TxtDeployStatus.Text       = $"❌  Errore PXE: {ex.Message}";
+        }
+        finally { BtnDeployPxe.IsEnabled = true; }
     }
 }
