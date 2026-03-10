@@ -9,6 +9,14 @@ namespace NovaSCM;
 // Logica identica alla versione WPF (PolarisManager/MainWindow.xaml.cs)
 internal static class DeployBuilders
 {
+    // ── Helpers di escape ────────────────────────────────────────────────────
+    /// <summary>Escape per valori inseriti in testo XML (sostituisce &amp; &lt; &gt; &quot; &apos;)</summary>
+    private static string Xe(string? s) =>
+        System.Security.SecurityElement.Escape(s ?? "") ?? "";
+
+    /// <summary>Escape per valori inseriti in stringhe PowerShell a singoli apici (raddoppia ')</summary>
+    private static string PsEsc(string? s) => (s ?? "").Replace("'", "''");
+
     internal static string BuildAutounattendXml(DeployConfig cfg)
     {
         var (inputLocale, _) = cfg.Locale switch
@@ -24,15 +32,15 @@ internal static class DeployBuilders
         var isServer = cfg.WinEdition.Contains("Server");
 
         var keySection = string.IsNullOrWhiteSpace(cfg.ProductKey) ? "" :
-            $"      <ProductKey><Key>{cfg.ProductKey.Trim().ToUpper()}</Key></ProductKey>\n";
+            $"      <ProductKey><Key>{Xe(cfg.ProductKey.Trim().ToUpper())}</Key></ProductKey>\n";
 
         var userSection = string.IsNullOrEmpty(cfg.UserName) ? "" :
             $@"
           <LocalAccount wcm:action=""add"">
-            <Name>{cfg.UserName}</Name>
+            <Name>{Xe(cfg.UserName)}</Name>
             <Group>Users</Group>
-            <DisplayName>{cfg.UserName}</DisplayName>
-            <Password><Value>{cfg.UserPassword}</Value><PlainText>true</PlainText></Password>
+            <DisplayName>{Xe(cfg.UserName)}</DisplayName>
+            <Password><Value>{Xe(cfg.UserPassword)}</Value><PlainText>true</PlainText></Password>
           </LocalAccount>";
 
         string oobeSection;
@@ -76,14 +84,14 @@ internal static class DeployBuilders
             rsSb.Append($@"
         <RunSynchronousCommand wcm:action=""add"">
           <Order>{rsOrd++}</Order>
-          <Path>powershell.exe -NonInteractive -Command ""for($i=0;$i-lt30;$i++){{$n=Get-NetAdapter|?{{$_.Status-eq'Up'-and$_.HardwareInterface}}|Select -First 1;if($n){{Set-DnsClientServerAddress -InterfaceIndex $n.InterfaceIndex -ServerAddresses '{cfg.DomainControllerIp}';break}};Start-Sleep 2}}""</Path>
+          <Path>powershell.exe -NonInteractive -Command ""for($i=0;$i-lt30;$i++){{$n=Get-NetAdapter|?{{$_.Status-eq'Up'-and$_.HardwareInterface}}|Select -First 1;if($n){{Set-DnsClientServerAddress -InterfaceIndex $n.InterfaceIndex -ServerAddresses '{Xe(PsEsc(cfg.DomainControllerIp))}';break}};Start-Sleep 2}}""</Path>
           <Description>Attendi rete e imposta DNS DC</Description>
         </RunSynchronousCommand>");
         if (cfg.DomainJoin == "AD" && !string.IsNullOrEmpty(cfg.DomainName))
             rsSb.Append($@"
         <RunSynchronousCommand wcm:action=""add"">
           <Order>{rsOrd++}</Order>
-          <Path>powershell.exe -NonInteractive -Command ""Add-Computer -DomainName '{cfg.DomainName}' -Credential (New-Object PSCredential('{cfg.DomainName}\{cfg.DomainUser}',(ConvertTo-SecureString '{cfg.DomainPassword}' -AsPlainText -Force))) -Force -ErrorAction SilentlyContinue""</Path>
+          <Path>powershell.exe -NonInteractive -Command ""Add-Computer -DomainName '{Xe(PsEsc(cfg.DomainName))}' -Credential (New-Object PSCredential('{Xe(PsEsc(cfg.DomainName))}\\{Xe(PsEsc(cfg.DomainUser))}',(ConvertTo-SecureString '{Xe(PsEsc(cfg.DomainPassword))}' -AsPlainText -Force))) -Force -ErrorAction SilentlyContinue""</Path>
           <Description>Join dominio AD</Description>
         </RunSynchronousCommand>");
         var runSyncBlock = rsSb.Length > 0
@@ -144,7 +152,7 @@ internal static class DeployBuilders
           <InstallTo><DiskID>0</DiskID><PartitionID>3</PartitionID></InstallTo>
           <InstallFrom>
             <MetaData wcm:action=""add"">
-              <Key>/IMAGE/NAME</Key><Value>{cfg.WinEdition}</Value>
+              <Key>/IMAGE/NAME</Key><Value>{Xe(cfg.WinEdition)}</Value>
             </MetaData>
           </InstallFrom>
           <WillShowUI>OnError</WillShowUI>
@@ -164,7 +172,7 @@ internal static class DeployBuilders
                processorArchitecture=""amd64""
                publicKeyToken=""31bf3856ad364e35""
                language=""neutral"" versionScope=""nonSxS"">
-      <ComputerName>{pcName}</ComputerName>
+      <ComputerName>{Xe(pcName)}</ComputerName>
       <TimeZone>{cfg.TimeZone}</TimeZone>
       <RegisteredOrganization>NovaSCM</RegisteredOrganization>
       {runSyncBlock}
@@ -193,14 +201,14 @@ internal static class DeployBuilders
             <Name>Administrator</Name>
             <Group>Administrators</Group>
             <Password>
-              <Value>{cfg.AdminPassword}</Value>
+              <Value>{Xe(cfg.AdminPassword)}</Value>
               <PlainText>true</PlainText>
             </Password>
           </LocalAccount>{userSection}
         </LocalAccounts>
       </UserAccounts>
       <AutoLogon>
-        <Password><Value>{cfg.AdminPassword}</Value><PlainText>true</PlainText></Password>
+        <Password><Value>{Xe(cfg.AdminPassword)}</Value><PlainText>true</PlainText></Password>
         <Enabled>true</Enabled>
         <LogonCount>1</LogonCount>
         <Username>Administrator</Username>
@@ -237,6 +245,7 @@ internal static class DeployBuilders
 
         var reportStepFn = !string.IsNullOrEmpty(cfg.NovaSCMCrApiUrl) ? $@"
 $_crApi    = '{cfg.NovaSCMCrApiUrl}'
+$_apiKey   = '{cfg.NovaSCMApiKey}'
 $_hostname = $env:COMPUTERNAME
 function Report-Step {{
     param([string]$Step, [string]$Status = 'done')
@@ -246,6 +255,7 @@ function Report-Step {{
             (ConvertTo-Json @{{step=$Step;status=$Status;ts=(Get-Date -Format 'o')}} -Compress))
         $r = [Net.WebRequest]::Create(""$_crApi/by-name/$_hostname/step"")
         $r.Method = 'POST'; $r.ContentType = 'application/json'
+        if ($_apiKey) {{ $r.Headers['X-Api-Key'] = $_apiKey }}
         $r.ContentLength = $b.Length; $r.Timeout = 5000
         $s = $r.GetRequestStream(); $s.Write($b,0,$b.Length); $s.Close()
         $r.GetResponse().Close()
@@ -297,13 +307,17 @@ try {{
 
         var agentSection = cfg.IncludeAgent && !string.IsNullOrEmpty(cfg.ServerUrl) ? $@"
 # Installa agente NovaSCM (enrollment WiFi EAP-TLS)
+$agentTmp = Join-Path $env:TEMP ""novascm-agent-$([System.IO.Path]::GetRandomFileName()).ps1""
 try {{
     $agentUrl = '{cfg.ServerUrl.TrimEnd('/')}/agent/install.ps1'
     Write-Output ""Download agente da: $agentUrl""
-    Invoke-RestMethod -Uri $agentUrl -UseBasicParsing | Invoke-Expression
+    Invoke-WebRequest -Uri $agentUrl -OutFile $agentTmp -UseBasicParsing
+    powershell.exe -NonInteractive -ExecutionPolicy Bypass -File $agentTmp
     Write-Output 'Agente NovaSCM installato'
 }} catch {{
     Write-Warning ""Agente NovaSCM non raggiungibile: $($_.Exception.Message)""
+}} finally {{
+    if (Test-Path $agentTmp) {{ Remove-Item -Force $agentTmp -ErrorAction SilentlyContinue }}
 }}" : "# Agente WiFi EAP-TLS non incluso";
 
         var novaSCMBaseUrl = !string.IsNullOrEmpty(cfg.NovaSCMCrApiUrl)
@@ -312,17 +326,22 @@ try {{
         var workflowAgentSection = !string.IsNullOrEmpty(novaSCMBaseUrl) ? $@"
 # Installa NovaSCM Workflow Agent (servizio di esecuzione workflow)
 Report-Step 'workflow_agent_install' 'running'
+$wfAgentTmp = Join-Path $env:TEMP ""novascm-wfagent-$([System.IO.Path]::GetRandomFileName()).ps1""
 try {{
     $wfAgentInstaller = '{novaSCMBaseUrl}/api/download/agent-install.ps1'
     Write-Output ""Download NovaSCM Workflow Agent da: $wfAgentInstaller""
-    $installerScript = (Invoke-WebRequest -Uri $wfAgentInstaller -UseBasicParsing).Content
-    $installerScript = $installerScript -replace '\$ApiUrl\s*=.*', '$ApiUrl = ""{novaSCMBaseUrl}""'
-    Invoke-Expression $installerScript
+    Invoke-WebRequest -Uri $wfAgentInstaller -OutFile $wfAgentTmp -UseBasicParsing
+    # Sostituisce l'ApiUrl nello script scaricato prima di eseguirlo
+    (Get-Content $wfAgentTmp) -replace '\$ApiUrl\s*=.*', '$ApiUrl = ""{novaSCMBaseUrl}""' |
+        Set-Content $wfAgentTmp
+    powershell.exe -NonInteractive -ExecutionPolicy Bypass -File $wfAgentTmp
     Write-Output 'NovaSCM Workflow Agent installato come servizio Windows'
     Report-Step 'workflow_agent_install' 'done'
 }} catch {{
     Write-Warning ""NovaSCM Workflow Agent non installato: $($_.Exception.Message)""
     Report-Step 'workflow_agent_install' 'error'
+}} finally {{
+    if (Test-Path $wfAgentTmp) {{ Remove-Item -Force $wfAgentTmp -ErrorAction SilentlyContinue }}
 }}" : "# NovaSCM Workflow Agent: API URL non configurato — skip";
 
         return $@"#Requires -RunAsAdministrator

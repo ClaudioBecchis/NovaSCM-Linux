@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>NovaSCM</AssemblyName>
     <Product>NovaSCM</Product>
-    <Version>1.1.0</Version>
+    <Version>1.7.2</Version>
     <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
 

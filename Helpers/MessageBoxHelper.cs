@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -80,5 +81,48 @@ public static class MessageBoxHelper
             win.Show();
 
         return result;
+    }
+
+    public static async Task<string?> ShowChoice(string message, IList<string> options, Window? owner = null, string title = "NovaSCM")
+    {
+        string? selected = null;
+        var win = new Window
+        {
+            Title = title,
+            Width = 440,
+            Height = 260,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            CanResize = false,
+        };
+
+        var panel = new StackPanel { Margin = new Avalonia.Thickness(24, 20, 24, 16), Spacing = 12 };
+        panel.Children.Add(new TextBlock
+        {
+            Text = message,
+            TextWrapping = TextWrapping.Wrap,
+            FontSize = 13,
+        });
+
+        var listBox = new ListBox { ItemsSource = options, Height = 90 };
+        if (options.Count > 0) listBox.SelectedIndex = 0;
+        panel.Children.Add(listBox);
+
+        var btnRow = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Spacing = 12 };
+        var btnOk     = new Button { Content = "OK",      Padding = new Avalonia.Thickness(24, 8) };
+        var btnCancel = new Button { Content = "Annulla", Padding = new Avalonia.Thickness(16, 8) };
+        btnOk.Click     += (_, _) => { selected = listBox.SelectedItem as string; win.Close(); };
+        btnCancel.Click += (_, _) => win.Close();
+        btnRow.Children.Add(btnOk);
+        btnRow.Children.Add(btnCancel);
+        panel.Children.Add(btnRow);
+
+        win.Content = panel;
+
+        if (owner != null)
+            await win.ShowDialog(owner);
+        else
+            win.Show();
+
+        return selected;
     }
 }

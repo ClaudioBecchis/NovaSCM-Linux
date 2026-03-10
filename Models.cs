@@ -173,6 +173,8 @@ public class AppConfig
     public string AdminPass     { get; set; } = "";
     public string ScanNetworks  { get; set; } = "192.168.1.0/24";
     public string NovaSCMApiUrl { get; set; } = "";
+    public string NovaSCMApiKey { get; set; } = "";
+    public string SshKeyPath    { get; set; } = "";
 }
 
 // Deploy config
@@ -191,6 +193,7 @@ public class DeployConfig
     public bool   IncludeAgent    { get; set; } = true;
     public string ServerUrl       { get; set; } = "";
     public string NovaSCMCrApiUrl { get; set; } = "";
+    public string NovaSCMApiKey   { get; set; } = "";
     public string PxeServerIp     { get; set; } = "";
     public string PxeServerPath   { get; set; } = "/srv/netboot/novascm/";
     public bool   UseMicrosoftAccount { get; set; } = false;

@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Reflection;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -17,7 +18,8 @@ namespace NovaSCM.Views;
 // ── MainWindow ────────────────────────────────────────────────────────────────
 public partial class MainWindow : Window
 {
-    private const string AppVersion = "1.1.0";
+    private static readonly string AppVersion =
+        Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.7.2";
 
     private static readonly string ConfigPath =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -170,6 +172,13 @@ public partial class MainWindow : Window
         var _d = Path.GetDirectoryName(ConfigPath)!; if (!Directory.Exists(_d)) Directory.CreateDirectory(_d);
         File.WriteAllText(ConfigPath,
             JsonSerializer.Serialize(_config, new JsonSerializerOptions { WriteIndented = true }));
+        // Limita i permessi del file di configurazione a 600 su Linux (contiene credenziali)
+        if (OperatingSystem.IsLinux())
+        {
+            try { Process.Start(new ProcessStartInfo("chmod")
+                  { ArgumentList = { "600", ConfigPath }, UseShellExecute = false, CreateNoWindow = true })
+                  ?.WaitForExit(2000); } catch { }
+        }
         TxtScanIp.Text       = _config.ScanNetwork;
         TxtScanSubnet.Text   = _config.ScanSubnet;
         TxtScanNetworks.Text = _config.ScanNetworks;
@@ -517,10 +526,21 @@ public partial class MainWindow : Window
         }
     }
 
+    private static readonly string _pveLogPath =
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                     "NovaSCM", "logs", "proxmox.log");
+
     private static void PveLog(string tag, string msg)
     {
-        try { System.IO.File.AppendAllText("/tmp/novascm_pve.log",
-            $"[{DateTime.Now:HH:mm:ss}] [{tag}] {msg}\n"); } catch { }
+        // Non loggare mai dati di autenticazione (ticket, credenziali)
+        if (tag is "AUTH" or "LOGIN" or "TICKET") return;
+        try
+        {
+            var dir = Path.GetDirectoryName(_pveLogPath)!;
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+            File.AppendAllText(_pveLogPath, $"[{DateTime.Now:HH:mm:ss}] [{tag}] {msg}\n");
+        }
+        catch { }
     }
 
     private void BtnPveRefresh_Click(object? s, RoutedEventArgs e) => BtnPveConnect_Click(s, e);
@@ -952,10 +972,12 @@ public partial class MainWindow : Window
             UserName       = TxtDeployUserName.Text?.Trim() ?? "",
             UserPassword   = TxtDeployUserPass.Text ?? "",
             WingetPackages = pkgs,
-            IncludeAgent   = ChkDeployAgent.IsChecked == true,
-            ServerUrl      = TxtDeployServerUrl.Text?.Trim() ?? "",
-            PxeServerIp    = TxtDeployPxeIp.Text?.Trim() ?? "",
-            PxeServerPath  = TxtDeployPxePath.Text?.Trim() ?? "/srv/netboot/novascm/",
+            IncludeAgent      = ChkDeployAgent.IsChecked == true,
+            ServerUrl         = TxtDeployServerUrl.Text?.Trim() ?? "",
+            NovaSCMCrApiUrl   = _config.NovaSCMApiUrl,
+            NovaSCMApiKey     = _config.NovaSCMApiKey,
+            PxeServerIp       = TxtDeployPxeIp.Text?.Trim() ?? "",
+            PxeServerPath     = TxtDeployPxePath.Text?.Trim() ?? "/srv/netboot/novascm/",
         };
     }
 
@@ -1015,7 +1037,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void BtnDeployUsb_Click(object? s, RoutedEventArgs e)
+    private async void BtnDeployUsb_Click(object? s, RoutedEventArgs e)
     {
         if (_deployTmpDir == null) return;
         StartDeployInstallTimer();
@@ -1042,7 +1064,19 @@ public partial class MainWindow : Window
             TxtDeployStatus.Text = "⚠️  Nessuna USB trovata. Inserisci la chiavetta e riprova.";
             return;
         }
-        var drive = usbPaths[0];
+        string drive;
+        if (usbPaths.Count == 1)
+        {
+            drive = usbPaths[0];
+        }
+        else
+        {
+            var choice = await MessageBoxHelper.ShowChoice(
+                $"Trovate {usbPaths.Count} unità rimovibili. Seleziona quella di destinazione:",
+                usbPaths, this);
+            if (choice == null) return;
+            drive = choice;
+        }
         try
         {
             File.Copy(Path.Combine(_deployTmpDir, "autounattend.xml"), Path.Combine(drive, "autounattend.xml"), overwrite: true);
@@ -1064,8 +1098,9 @@ public partial class MainWindow : Window
         var cfg     = BuildDeployConfigFromUi();
         var pxeIp   = cfg.PxeServerIp;
         var pxePath = cfg.PxeServerPath;
-        var keyPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".ssh", "id_ed25519");
+        var keyPath = !string.IsNullOrEmpty(_config.SshKeyPath)
+            ? _config.SshKeyPath
+            : App.Platform.GetDefaultSshKeyPath();
         TxtDeployStatus.Foreground = Avalonia.Media.Brushes.Yellow;
         TxtDeployStatus.Text       = $"⏳  Upload su PXE {pxeIp}...";
         BtnDeployPxe.IsEnabled     = false;
