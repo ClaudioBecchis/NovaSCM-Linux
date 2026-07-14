@@ -13,7 +13,9 @@ unzip NovaSCM-v*-linux-x64.zip -d novascm && cd novascm
 chmod +x NovaSCM && ./NovaSCM
 ```
 
-Richiede glibc recente (Debian 12+/Ubuntu 22.04+). Nessuna dipendenza .NET da installare: il binario è self-contained.
+Richiede glibc recente (Debian 12+/Ubuntu 22.04+) e `fontconfig` (`sudo apt install fontconfig` su installazioni minimali). Nessuna dipendenza .NET: il binario è self-contained.
+
+📖 **[Guida completa all'installazione su Linux](https://novascm.polariscore.it/docs/installazione-linux.html)**
 
 ## Funzionalità
 
